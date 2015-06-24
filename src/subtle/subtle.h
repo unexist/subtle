@@ -319,6 +319,7 @@
 #define SUB_SCREEN_PANEL1             (1L << 10)                  ///< Screen sanel1 enabled
 #define SUB_SCREEN_PANEL2             (1L << 11)                  ///< Screen sanel2 enabled
 #define SUB_SCREEN_STIPPLE            (1L << 12)                  ///< Screen stipple enabled
+#define SUB_SCREEN_VIRTUAL            (1L << 13)                  ///< Screen is virtual
 
 /* Style flags */
 #define SUB_STYLE_FONT                (1L << 10)                  ///< Style has custom font
@@ -622,9 +623,6 @@ typedef struct subscreen_t /* {{{ */
   Drawable          drawable;                                     ///< Screen drawable
   Window            panel1, panel2;                               ///< Screen windows
   struct subarray_t *panels;                                      ///< Screen panels
-
-  /* FIXME: Cache ruby object during config */
-  unsigned long     top, bottom;                                  ///< Screen panel values
 } SubScreen; /* }}} */
 
 typedef struct subseparator_t /* {{{ */
@@ -706,10 +704,10 @@ typedef struct subsubtle_t /* {{{ */
   struct
   {
     struct substyle_t all, views, title, sublets, separator,
-                      clients, subtle;                            ///< Subtle base styles
+                      clients, panel_top, panel_bot, tray;        ///< Subtle base styles
 
     struct substyle_t *urgent, *occupied, *focus, *visible,
-                      *viewsep, *subletsep;                       ///< For faster access to sub-styles
+                      *view_sep, *sublet_sep;                     ///< For faster access to sub-styles
   } styles;                                                       ///< Subtle styles
 
   struct

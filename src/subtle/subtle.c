@@ -254,7 +254,9 @@ subSubtleFinish(void)
       subStyleReset(&subtle->styles.sublets,   0);
       subStyleReset(&subtle->styles.separator, 0);
       subStyleReset(&subtle->styles.clients,   0);
-      subStyleReset(&subtle->styles.subtle,    0);
+      subStyleReset(&subtle->styles.panel_top, 0);
+      subStyleReset(&subtle->styles.panel_bot, 0);
+      subStyleReset(&subtle->styles.tray,      0);
 
       subEventFinish();
       subRubyFinish();

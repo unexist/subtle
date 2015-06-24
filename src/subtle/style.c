@@ -50,7 +50,7 @@ StyleInherit(SubStyle *s1,
   if(s1->font)
     {
       /* Check max height of style */
-      if(s1 != &subtle->styles.clients || s1 != &subtle->styles.subtle)
+      if(s1 != &subtle->styles.clients)
         {
           int height = STYLE_HEIGHT((*s1)) + s1->font->height;
 
@@ -299,8 +299,8 @@ subStyleUpdate(void)
   StyleFont(&(subtle->styles.sublets),   "sublets");
   StyleFont(subtle->styles.occupied,     "occupied");
   StyleFont(subtle->styles.focus,        "focus");
-  StyleFont(subtle->styles.viewsep,      "view separator");
-  StyleFont(subtle->styles.subletsep,    "sublet separator");
+  StyleFont(subtle->styles.view_sep,      "view separator");
+  StyleFont(subtle->styles.sublet_sep,    "sublet separator");
 
   subSubtleLogDebugSubtle("Update\n");
 } /* }}} */
