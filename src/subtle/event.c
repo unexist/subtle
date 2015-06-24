@@ -1578,7 +1578,7 @@ EventProperty(XPropertyEvent *ev)
 #endif
 } /* }}} */
 
-/* EventSelft on heection {{{ */
+/* EventSelection {{{ */
 void
 EventSelection(XSelectionClearEvent *ev)
 {

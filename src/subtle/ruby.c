@@ -34,6 +34,7 @@
 /* Globals {{{ */
 static VALUE shelter = Qnil, mod = Qnil, config_sublets = Qnil;
 static VALUE config_instance = Qnil, config_methods = Qnil;
+static VALUE panel_top = Qnil, panel_bottom = Qnil;
 /* }}} */
 
 /* Typedef {{{ */
@@ -267,17 +268,30 @@ RubySymbolToFlag(VALUE sym,
   int *flags)
 {
   /* Translate symbols to flags */
-  if(CHAR2SYM("name")          == sym) (*flags) |= SUB_TAG_MATCH_NAME;
-  else if(CHAR2SYM("instance") == sym) (*flags) |= SUB_TAG_MATCH_INSTANCE;
-  else if(CHAR2SYM("class")    == sym) (*flags) |= SUB_TAG_MATCH_CLASS;
-  else if(CHAR2SYM("role")     == sym) (*flags) |= SUB_TAG_MATCH_ROLE;
-  else if(CHAR2SYM("type")     == sym) (*flags) |= SUB_TAG_MATCH_TYPE;
-  else if(CHAR2SYM("normal")   == sym) (*flags) |= SUB_CLIENT_TYPE_NORMAL;
-  else if(CHAR2SYM("desktop")  == sym) (*flags) |= SUB_CLIENT_TYPE_DESKTOP;
-  else if(CHAR2SYM("dock")     == sym) (*flags) |= SUB_CLIENT_TYPE_DOCK;
-  else if(CHAR2SYM("toolbar")  == sym) (*flags) |= SUB_CLIENT_TYPE_TOOLBAR;
-  else if(CHAR2SYM("splash")   == sym) (*flags) |= SUB_CLIENT_TYPE_SPLASH;
-  else if(CHAR2SYM("dialog")   == sym) (*flags) |= SUB_CLIENT_TYPE_DIALOG;
+  if(CHAR2SYM("name")            == sym) (*flags) |= SUB_TAG_MATCH_NAME;
+  else if(CHAR2SYM("instance")   == sym) (*flags) |= SUB_TAG_MATCH_INSTANCE;
+  else if(CHAR2SYM("class")      == sym) (*flags) |= SUB_TAG_MATCH_CLASS;
+  else if(CHAR2SYM("role")       == sym) (*flags) |= SUB_TAG_MATCH_ROLE;
+  else if(CHAR2SYM("type")       == sym) (*flags) |= SUB_TAG_MATCH_TYPE;
+
+  /* Types */
+  else if(CHAR2SYM("normal")     == sym) (*flags) |= SUB_CLIENT_TYPE_NORMAL;
+  else if(CHAR2SYM("desktop")    == sym) (*flags) |= SUB_CLIENT_TYPE_DESKTOP;
+  else if(CHAR2SYM("dock")       == sym) (*flags) |= SUB_CLIENT_TYPE_DOCK;
+  else if(CHAR2SYM("toolbar")    == sym) (*flags) |= SUB_CLIENT_TYPE_TOOLBAR;
+  else if(CHAR2SYM("splash")     == sym) (*flags) |= SUB_CLIENT_TYPE_SPLASH;
+  else if(CHAR2SYM("dialog")     == sym) (*flags) |= SUB_CLIENT_TYPE_DIALOG;
+
+  /* Modes */
+  else if(CHAR2SYM("borderless") == sym) (*flags) |= SUB_CLIENT_MODE_BORDERLESS;
+  else if(CHAR2SYM("centered")   == sym) (*flags) |= SUB_CLIENT_MODE_CENTER;
+  else if(CHAR2SYM("fixed")      == sym) (*flags) |= SUB_CLIENT_MODE_FIXED;
+  else if(CHAR2SYM("floating")   == sym) (*flags) |= SUB_CLIENT_MODE_FLOAT;
+  else if(CHAR2SYM("fullscreen") == sym) (*flags) |= SUB_CLIENT_MODE_FULL;
+  else if(CHAR2SYM("resize")     == sym) (*flags) |= SUB_CLIENT_MODE_RESIZE;
+  else if(CHAR2SYM("sticky")     == sym) (*flags) |= SUB_CLIENT_MODE_STICK;
+  else if(CHAR2SYM("urgent")     == sym) (*flags) |= SUB_CLIENT_MODE_URGENT;
+  else if(CHAR2SYM("zaphod")     == sym) (*flags) |= SUB_CLIENT_MODE_ZAPHOD;
 } /* }}} */
 
 /* RubyArrayToArray {{{ */
@@ -432,27 +446,6 @@ RubyValueToIcon(VALUE value)
     }
 
   return icon;
-} /* }}} */
-
-/* RubyValueToHash {{{ */
-static VALUE
-RubyValueToHash(VALUE value)
-{
-  VALUE hash = Qnil;
-
-  /* Check value type */
-  switch(rb_type(value))
-    {
-      case T_HASH: hash = value; break;
-      case T_NIL:                break; ///< Ignore this case
-      default:
-        /* Convert to hash */
-        hash = rb_hash_new();
-
-        rb_hash_aset(hash, Qnil, value);
-    }
-
-  return hash;
 } /* }}} */
 
 /* RubyHashToColor {{{ */
@@ -1030,6 +1023,31 @@ RubyEvalPanel(VALUE ary,
     }
 } /* }}} */
 
+/* RubyEvalPanelConfig {{{ */
+static void
+RubyEvalPanelConfig(int flag,
+  VALUE config)
+{
+  int i;
+
+  /* Iterate over config array */
+  for(i = 0; i < (int)RARRAY_LEN(config); i += 2)
+    {
+      int idx      = FIX2INT(rb_ary_entry(config, i));
+      VALUE panels = rb_ary_entry(config, i + 1);
+
+      /* Sanity check */
+      SubScreen *s = SCREEN(subArrayGet(subtle->screens, (idx - 1)));
+
+      if(s)
+        {
+          if(!s->panels) s->panels = subArrayNew();
+
+          RubyEvalPanel(panels, flag, s);
+        }
+    }
+} /* }}} */
+
 /* RubyEvalConfig {{{ */
 static void
 RubyEvalConfig(void)
@@ -1089,11 +1107,7 @@ RubyEvalConfig(void)
     {
       SubScreen *s = SCREEN(subtle->screens->data[i]);
 
-      /* Check if vid exists */
-      if(0 > s->viewid || s->viewid >= subtle->views->ndata)
-        s->viewid = 0;
-
-      s->flags &= ~SUB_RUBY_DATA;
+      s->viewid = i < subtle->views->ndata ? i : -1;
     }
 
   /* Check and update tags */
@@ -1158,90 +1172,103 @@ RubyEvalConfig(void)
 /* RubyEvalStyle {{{ */
 static void
 RubyEvalStyle(VALUE name,
-  SubStyle *s,
+  SubStyle *style,
   VALUE params)
 {
   int bw = -1;
   long border = -1;
   VALUE value = Qnil;
 
-  /* Special cases */
-  if(CHAR2SYM("subtle") == name)
+  /* Special case */
+  if(CHAR2SYM("clients") == name)
     {
-      /* Get colors */
-      RubyHashToColor(params, "background",   &s->bg);
-      RubyHashToColor(params, "panel_top",    &s->top);
-      RubyHashToColor(params, "panel_bottom", &s->bottom);
-      RubyHashToColor(params, "stipple",      &s->fg);
-
-      /* Set strut */
-      RubyHashToSides(params, "strut",   &s->padding);
-      RubyHashToSides(params, "padding", &s->padding);
-
-      /* Set both panel colors */
-      if(!NIL_P(value = rb_hash_lookup(params, CHAR2SYM("panel"))))
-        {
-          RubyHashToColor(params, "panel", &s->top);
-          s->bottom = s->top;
-        }
-    }
-  else if(CHAR2SYM("clients") == name)
-    {
-      /* We misuse some style values here:
+      /* We exploit some unused style variables here:
        * border-top   <-> client border
        * border-right <-> title length
-       * margin       <-> client gap */
+       * margin       <-> client gap
+       * padding      <-> client strut */
 
       /* Set border color and width */
-      RubyHashToBorder(params, "active",   &s->fg, &s->border.top);
-      RubyHashToBorder(params, "inactive", &s->bg, &s->border.top);
+      RubyHashToBorder(params, "active",   &style->fg, &style->border.top);
+      RubyHashToBorder(params, "inactive", &style->bg, &style->border.top);
 
-      /* Get client margin */
-      RubyHashToSides(params, "margin", &s->margin);
+      /* Set client margin */
+      RubyHashToSides(params, "margin", &style->margin);
+
+      /* Set strut */
+      RubyHashToSides(params, "strut",   &style->padding);
+      RubyHashToSides(params, "padding", &style->padding);
 
       /* FIXME: Set title width, but that should be a title style, right? */
       if(FIXNUM_P(value = rb_hash_lookup(params, CHAR2SYM("width"))))
-        s->right = FIX2INT(value);
-      else s->right = 50;
+        style->right = FIX2INT(value);
+      else style->right = 50;
     }
   else
     {
       /* Get colors */
-      RubyHashToColor(params, "foreground", &s->fg);
-      RubyHashToColor(params, "background", &s->bg);
-      RubyHashToColor(params, "icon",       &s->icon);
+      RubyHashToColor(params, "foreground", &style->fg);
+      RubyHashToColor(params, "background", &style->bg);
+
+      /* Get icon */
+      if(CHAR2SYM("panel_top") == name || CHAR2SYM("panel_bottom") == name)
+        {
+          RubyHashToColor(params, "stipple", &style->icon);
+
+          /* Store screen config for later use */
+          if(T_ARRAY == rb_type(value = rb_hash_lookup(params,
+              CHAR2SYM("screen"))))
+            {
+              if(CHAR2SYM("panel_top") == name)
+                {
+                  panel_top = value;
+                  rb_ary_push(shelter, panel_top); ///< Protect from GC
+                }
+              else
+                {
+                  panel_bottom = value;
+                  rb_ary_push(shelter, panel_bottom); ///< Protect from GC
+                }
+            }
+        }
+      else RubyHashToColor(params, "icon", &style->icon);
 
       /* Set all borders */
       RubyHashToBorder(params, "border", &border, &bw);
 
       /* Get borders */
-      RubyHashToBorder(params, "border_top",    &s->top,    &s->border.top);
-      RubyHashToBorder(params, "border_right",  &s->right,  &s->border.right);
-      RubyHashToBorder(params, "border_bottom", &s->bottom, &s->border.bottom);
-      RubyHashToBorder(params, "border_left",   &s->left,   &s->border.left);
+      RubyHashToBorder(params, "border_top",
+        &style->top, &style->border.top);
+      RubyHashToBorder(params, "border_right",
+        &style->right, &style->border.right);
+      RubyHashToBorder(params, "border_bottom",
+        &style->bottom, &style->border.bottom);
+      RubyHashToBorder(params, "border_left",
+        &style->left, &style->border.left);
 
       /* Apply catchall values */
-      if(-1 != border) s->top = s->right = s->bottom = s->left = border;
+      if(-1 != border)
+        style->top = style->right = style->bottom = style->left = border;
       if(-1 != bw)
         {
-          s->border.top = s->border.right =
-            s->border.bottom = s->border.left = bw;
+          style->border.top = style->border.right =
+            style->border.bottom = style->border.left = bw;
         }
 
       /* Get padding/margin */
-      RubyHashToSides(params, "padding", &s->padding);
-      RubyHashToSides(params, "margin",  &s->margin);
+      RubyHashToSides(params, "padding", &style->padding);
+      RubyHashToSides(params, "margin",  &style->margin);
 
       /* Get min width */
-      RubyHashToInt(params, "min_width", &s->min);
-      s->min = MAX(0, s->min);
+      RubyHashToInt(params, "min_width", &style->min);
+      style->min = MAX(0, style->min);
 
       /* Style font */
       if(T_STRING == rb_type(value = rb_hash_lookup(params,
-          CHAR2SYM("font"))) && !s->font)
+          CHAR2SYM("font"))) && !style->font)
         {
-          s->flags |= SUB_STYLE_FONT;
-          s->font   = RubyFont(RSTRING_PTR(value));
+          style->flags |= SUB_STYLE_FONT;
+          style->font   = RubyFont(RSTRING_PTR(value));
 
           /* EWMH: Font */
           if(CHAR2SYM("all") == name)
@@ -1250,14 +1277,14 @@ RubyEvalStyle(VALUE name,
 
       /* Style separator */
       if(T_STRING == rb_type(value = rb_hash_lookup(params,
-          CHAR2SYM("separator"))) && !s->separator)
+          CHAR2SYM("separator"))) && !style->separator)
         {
-          s->flags |= SUB_STYLE_SEPARATOR;
+          style->flags |= SUB_STYLE_SEPARATOR;
 
           /* Create new separator */
-          s->separator = (SubSeparator *)subSharedMemoryAlloc(1,
+          style->separator = (SubSeparator *)subSharedMemoryAlloc(1,
             sizeof(SubSeparator));
-          s->separator->string  = strdup(RSTRING_PTR(value));
+          style->separator->string  = strdup(RSTRING_PTR(value));
        }
    }
 } /* }}} */
@@ -1348,20 +1375,10 @@ RubyForeachStyle(VALUE key,
       else if(CHAR2SYM("occupied")   == key) subtle->styles.occupied = style;
       else if(CHAR2SYM("focus")      == key) subtle->styles.focus    = style;
       else if(CHAR2SYM("visible")    == key) subtle->styles.visible  = style;
-      else if(CHAR2SYM("separator")  == key) subtle->styles.viewsep  = style;
-      else if(CHAR2SYM("unoccupied") == key)
-        {
-          subSubtleLogDeprecated("The `unoccupied' style is deprecated, "
-            "please use the `views' style for normal views instead.\n");
-
-          subStyleMerge(&subtle->styles.views, style);
-          subStyleKill(style);
-
-          return ST_CONTINUE;
-        }
+      else if(CHAR2SYM("separator")  == key) subtle->styles.view_sep = style;
     }
   else if(&subtle->styles.sublets == s)
-    if(CHAR2SYM("separator") == key) subtle->styles.subletsep = style;
+    if(CHAR2SYM("separator") == key) subtle->styles.sublet_sep = style;
 
   /* Finally add style */
   if(!s->styles) s->styles = subArrayNew();
@@ -1384,17 +1401,11 @@ static VALUE
 RubyWrapLoadPanels(VALUE data)
 {
   int i;
+  SubScreen *s = NULL;
 
-  /* Pass 1: Load actual panels */
-  for(i = 0; i < subtle->screens->ndata; i++)
-    {
-      SubScreen *s = SCREEN(subtle->screens->data[i]);
-
-      if(!s->panels) s->panels = subArrayNew();
-
-      RubyEvalPanel(s->top,    SUB_SCREEN_PANEL1, s);
-      RubyEvalPanel(s->bottom, SUB_SCREEN_PANEL2, s);
-    }
+  /* Pass 1: Load actual panel config */
+  RubyEvalPanelConfig(SUB_SCREEN_PANEL1, panel_top);
+  RubyEvalPanelConfig(SUB_SCREEN_PANEL2, panel_bottom);
 
   /* Pass 2: Add remaining sublets if any */
   if(0 < subtle->sublets->ndata)
@@ -1403,15 +1414,17 @@ RubyWrapLoadPanels(VALUE data)
 
       for(i = 0; i < subtle->screens->ndata; i++)
         {
-          SubScreen *s = SCREEN(subtle->screens->data[i]);
-          Window panel = s->panel1;
+          s = SCREEN(subtle->screens->data[i]);
+          Window win = s->panel1;
+
+          if(!s->panels) continue;
 
           for(j = 0; j < s->panels->ndata; j++)
             {
               SubPanel *p = PANEL(s->panels->data[j]);
 
-              if(panel != s->panel2 && p->flags & SUB_PANEL_BOTTOM)
-                panel = s->panel2;
+              if(win != s->panel2 && p->flags & SUB_PANEL_BOTTOM)
+                win = s->panel2;
 
               /* Find dummy panel */
               if(p->flags & SUB_PANEL_SUBLETS)
@@ -1699,7 +1712,7 @@ RubyOptionsDispatcher(int argc,
 {
   VALUE ret = Qnil, missing = Qnil, args[4] = { Qnil };
 
-  rb_scan_args(argc, argv, "23", &missing,
+  rb_scan_args(argc, argv, "14", &missing,
     &args[0], &args[1], &args[2], &args[3]);
 
   /* Check whether missing is included in methods array
@@ -1710,60 +1723,52 @@ RubyOptionsDispatcher(int argc,
     }
   else
     {
-      VALUE arg = Qnil;
+      VALUE param = Qnil, params = rb_iv_get(self, "@params"), value = Qnil;
 
-      /* Convert multiple argument to one array */
-      if(2 < argc)
+      /* Merge multiple argument into one array */
+      if(rb_block_given_p())
+        param = rb_block_proc(); ///< Get proc
+      else if(2 < argc)
         {
           int i;
 
           /* Move args into array */
-          arg = rb_ary_new();
+          param = rb_ary_new();
 
           for(i = 0; i < LENGTH(args); i++)
-            if(!NIL_P(args[i])) rb_ary_push(arg, args[i]);
+            if(!NIL_P(args[i])) rb_ary_push(param, args[i]);
         }
-      else arg = args[0];
+      else param = args[0];
 
-      ret = rb_hash_aset(rb_iv_get(self, "@params"), missing, arg);
+      /* Merge multiple parameters into one array */
+      switch(rb_type((value = rb_hash_lookup(params, missing))))
+        {
+          case T_NIL: break; ///< Just fall through and store
+          case T_ARRAY:
+              {
+                /* Either concat or push */
+                if(T_ARRAY == rb_type(param))
+                  rb_ary_concat(value, param);
+                else rb_ary_push(value, param);
+
+                param = value;
+                break;
+              }
+          default:
+            {
+              VALUE ary = rb_ary_new();
+
+              rb_ary_push(ary, value);
+              rb_ary_push(ary, param);
+
+              param = ary;
+            }
+        }
+
+      ret = rb_hash_aset(params, missing, param);
     }
 
   return ret;
-} /* }}} */
-
-/* RubyOptionsMatch {{{ */
-/*
- * call-seq: match -> nil
- *
- * Append match hashes if called multiple times
- *
- *  option.match :name => /foo/
- *  => nil
- */
-
-static VALUE
-RubyOptionsMatch(VALUE self,
-  VALUE value)
-{
-  VALUE params = Qnil, ary = Qnil, hash = Qnil, sym = Qnil;
-
-  /* Get params and convert value to hash */
-  params = rb_iv_get(self, "@params");
-  hash   = RubyValueToHash(value);
-  sym    = CHAR2SYM("match");
-
-  /* Check if hash contains key and add or otherwise create it */
-  if(T_ARRAY != rb_type(ary = rb_hash_lookup(params, sym)))
-    {
-      ary = rb_ary_new();
-
-      rb_hash_aset(params, sym, ary);
-    }
-
-  /* Finally add value to array */
-  rb_ary_push(ary, hash);
-
-  return Qnil;
 } /* }}} */
 
 /* RubyOptionsGravity {{{ */
@@ -1828,40 +1833,6 @@ RubyOptionsStyle(VALUE self,
       /* Just append to params */
       rb_hash_aset(params, CHAR2SYM("style"), name);
     }
-
-  return Qnil;
-} /* }}} */
-
-/* RubyOptionsOnMatch {{{ */
-/*
- * call-seq: on_match(, blk) -> nil
- *
- * Add a tag on match proc
- *
- *  tag "test" do
- *    match "foobar"
- *
- *    on_match do |c|
- *      c.gravity = :foobar
- *    end
- *  end
- */
-
-static VALUE
-RubyOptionsOnMatch(int argc,
-  VALUE *argv,
-  VALUE self)
-{
-  VALUE value = Qnil;
-
-  rb_scan_args(argc, argv, "01", &value);
-
-  if(subtle->flags & SUB_SUBTLE_CHECK) return Qnil; ///< Skip on check
-
-  if(rb_block_given_p()) value = rb_block_proc(); ///< Get proc
-
-  rb_hash_aset(rb_iv_get(self, "@params"),
-    CHAR2SYM("on_match"), value);
 
   return Qnil;
 } /* }}} */
@@ -2133,11 +2104,10 @@ RubyConfigTag(int argc,
       klass   = rb_const_get(mod, rb_intern("Options"));
       options = rb_funcall(klass, rb_intern("new"), 1, self);
       rb_obj_instance_eval(0, 0, options);
-      params = rb_iv_get(options, "@params");
+      params  = rb_iv_get(options, "@params");
 
       /* Check matcher */
-      if(T_ARRAY == rb_type(value = rb_hash_lookup(params,
-          CHAR2SYM("match"))))
+      if(!NIL_P(value = rb_hash_lookup(params, CHAR2SYM("match"))))
         match = value; ///< Lazy eval
 
       /* Set gravity */
@@ -2168,51 +2138,33 @@ RubyConfigTag(int argc,
       /* Set window type */
       if(T_SYMBOL == rb_type(value = rb_hash_lookup(params,
           CHAR2SYM("type"))))
+        RubySymbolToFlag(value, &flags);
+
+      /* Set modes */
+      if(T_SYMBOL == rb_type(value = rb_hash_lookup(params,
+          CHAR2SYM("set"))))
         {
-          /* Check type */
-          if(CHAR2SYM("normal")       == value) flags = SUB_CLIENT_TYPE_NORMAL;
-          else if(CHAR2SYM("desktop") == value) flags = SUB_CLIENT_TYPE_DESKTOP;
-          else if(CHAR2SYM("dock")    == value) flags = SUB_CLIENT_TYPE_DOCK;
-          else if(CHAR2SYM("toolbar") == value) flags = SUB_CLIENT_TYPE_TOOLBAR;
-          else if(CHAR2SYM("splash")  == value) flags = SUB_CLIENT_TYPE_SPLASH;
-          else if(CHAR2SYM("dialog")  == value) flags = SUB_CLIENT_TYPE_DIALOG;
+          RubySymbolToFlag(value, &flags);
+        }
+      else if(T_ARRAY == rb_type(value))
+        {
+          int i;
+          VALUE entry = Qnil;
+
+          /* Translate modes */
+          for(i = 0; Qnil != (entry = rb_ary_entry(value, i)); i++)
+            RubySymbolToFlag(entry, &flags);
         }
 
-      /* Check state properties */
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("borderless")))) flags |= SUB_CLIENT_MODE_BORDERLESS;
-
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("center")))) flags |= SUB_CLIENT_MODE_CENTER;
-
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("fixed")))) flags |= SUB_CLIENT_MODE_FIXED;
-
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("float")))) flags |= SUB_CLIENT_MODE_FLOAT;
-
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("full")))) flags |= SUB_CLIENT_MODE_FULL;
-
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("resize")))) flags |= SUB_CLIENT_MODE_RESIZE;
-
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("urgent")))) flags |= SUB_CLIENT_MODE_URGENT;
-
-      if(Qtrue == (value = rb_hash_lookup(params,
-        CHAR2SYM("zaphod")))) flags |= SUB_CLIENT_MODE_ZAPHOD;
-
       /* Set stick screen */
-      if(RTEST(value = rb_hash_lookup(params, CHAR2SYM("stick"))))
+      if(RTEST(value = rb_hash_lookup(params, CHAR2SYM("stick_to"))))
         {
-          /* Either screen id or just true */
+          /* Set screen id if any */
           if(FIXNUM_P(value))
             {
               screenid  = FIX2INT(value);
-              flags    |= SUB_CLIENT_MODE_STICK;
+              flags    |= (SUB_CLIENT_MODE_STICK|SUB_CLIENT_MODE_STICK_SCREEN);
             }
-          else if(Qtrue == value) flags |= SUB_CLIENT_MODE_STICK;
         }
 
       /* Set match proc */
@@ -2243,15 +2195,19 @@ RubyConfigTag(int argc,
 
               /* Set tag values */
               t->flags     |= flags;
-              t->gravityid = gravityid;
-              t->screenid  = screenid;
-              t->geom      = geom;
-              t->proc      = proc;
+              t->gravityid  = gravityid;
+              t->screenid   = screenid;
+              t->geom       = geom;
+              t->proc       = proc;
 
               /* Add matcher */
               rargs[0] = (VALUE)t;
               switch(rb_type(match))
                 {
+                  case T_HASH:
+                    rargs[1] = 0; ///< Reset matcher count
+                    rb_hash_foreach(match, RubyForeachMatcher, (VALUE)&rargs);
+                    break;
                   case T_ARRAY:
                     for(i = 0; T_HASH == rb_type(entry =
                         rb_ary_entry(match, i)); i++)
@@ -2305,9 +2261,7 @@ RubyConfigView(int argc,
       params  = rb_iv_get(options, "@params");
 
       /* Check match */
-      if(T_ARRAY == rb_type(value = rb_hash_lookup(params,
-          CHAR2SYM("match"))))
-        match = rb_hash_lookup(rb_ary_entry(value, 0), Qnil); ///< Lazy eval
+      match = rb_hash_lookup(params, CHAR2SYM("match")); ///< Lazy eval
 
       /* Check dynamic */
       if(Qtrue == (value = rb_hash_lookup(params,
@@ -2438,87 +2392,6 @@ RubyConfigSublet(VALUE self,
   return Qnil;
 } /* }}} */
 
-/* RubyConfigScreen {{{ */
-/*
- * call-seq: screen(name, blk) -> nil
- *
- * Set options for screen
- *
- *  screen 1 do
- *    stipple  false
- *    top      []
- *    bottom   []
- *  end
- */
-
-static VALUE
-RubyConfigScreen(VALUE self,
-  VALUE id)
-{
-  VALUE params = Qnil, value = Qnil, klass = Qnil, options = Qnil;
-  SubScreen *s = NULL;
-
-  /* FIXME: rb_need_block() */
-  if(!rb_block_given_p()) return Qnil;
-
-  /* Collect options */
-  klass   = rb_const_get(mod, rb_intern("Options"));
-  options = rb_funcall(klass, rb_intern("new"), 1, self);
-  rb_obj_instance_eval(0, 0, options);
-  params = rb_iv_get(options, "@params");
-
-  /* Check value type */
-  if(FIXNUM_P(id))
-    {
-      int flags = 0, vid = -1;
-      Pixmap stipple = None;
-      VALUE top = Qnil, bottom = Qnil;
-
-      /* Get options */
-      if(T_HASH == rb_type(params))
-        {
-          if(!NIL_P(value = RubyValueToIcon(rb_hash_lookup(params,
-              CHAR2SYM("stipple")))))
-            {
-              flags   |= SUB_SCREEN_STIPPLE;
-              stipple  = NUM2LONG(rb_iv_get(value, "@pixmap"));
-            }
-          if(T_ARRAY == rb_type(value = rb_hash_lookup(params,
-              CHAR2SYM("top"))))
-            {
-              top = value; /// Lazy eval
-              rb_ary_push(shelter, value); ///< Protect from GC
-            }
-          if(T_ARRAY == rb_type(value = rb_hash_lookup(params,
-              CHAR2SYM("bottom"))))
-            {
-              bottom = value; ///< Lazy eval
-              rb_ary_push(shelter, value); ///< Protect from GC
-            }
-          if(T_FIXNUM == rb_type(value = rb_hash_lookup(params,
-              CHAR2SYM("view"))))
-            vid = FIX2INT(value);
-        }
-
-      /* Skip on checking only */
-      if(!(subtle->flags & SUB_SUBTLE_CHECK))
-        {
-          if((s = subArrayGet(subtle->screens, FIX2INT(id) - 1)))
-            {
-              s->flags   |= (flags|SUB_RUBY_DATA);
-              s->top      = top;
-              s->bottom   = bottom;
-              s->stipple  = stipple;
-
-              if(-1 != vid) s->viewid = vid;
-            }
-        }
-    }
-  else rb_raise(rb_eArgError, "Unknown value type for screen");
-
-  return Qnil;
-} /* }}} */
-
 /* RubyConfigStyle {{{ */
 /*
  * call-seq: style(name, blk)   -> nil
@@ -2540,17 +2413,19 @@ RubyConfigStyle(VALUE self,
   /* Check value type */
   if(T_SYMBOL == rb_type(name))
     {
-      SubStyle *s = NULL;
+      SubStyle *style = NULL;
       VALUE klass = Qnil, options = Qnil, styles = Qnil;
 
       /* Select style struct */
-      if(CHAR2SYM("all")            == name) s = &subtle->styles.all;
-      else if(CHAR2SYM("views")     == name) s = &subtle->styles.views;
-      else if(CHAR2SYM("title")     == name) s = &subtle->styles.title;
-      else if(CHAR2SYM("sublets")   == name) s = &subtle->styles.sublets;
-      else if(CHAR2SYM("separator") == name) s = &subtle->styles.separator;
-      else if(CHAR2SYM("clients")   == name) s = &subtle->styles.clients;
-      else if(CHAR2SYM("subtle")    == name) s = &subtle->styles.subtle;
+      if(CHAR2SYM("all")               == name) style = &subtle->styles.all;
+      else if(CHAR2SYM("views")        == name) style = &subtle->styles.views;
+      else if(CHAR2SYM("title")        == name) style = &subtle->styles.title;
+      else if(CHAR2SYM("sublets")      == name) style = &subtle->styles.sublets;
+      else if(CHAR2SYM("separator")    == name) style = &subtle->styles.separator;
+      else if(CHAR2SYM("clients")      == name) style = &subtle->styles.clients;
+      else if(CHAR2SYM("panel_top")    == name) style = &subtle->styles.panel_top;
+      else if(CHAR2SYM("panel_bottom") == name) style = &subtle->styles.panel_bot;
+      else if(CHAR2SYM("tray")         == name) style = &subtle->styles.tray;
       else
         {
           subSubtleLogWarn("Unexpected style name `:%s'\n", SYM2CHAR(name));
@@ -2565,16 +2440,101 @@ RubyConfigStyle(VALUE self,
       options = rb_funcall(klass, rb_intern("new"), 1, self);
       rb_obj_instance_eval(0, 0, options);
 
-      /* Eval style before styles */
-      RubyEvalStyle(name, s, rb_iv_get(options, "@params"));
+      /* Eval style before nested styles */
+      RubyEvalStyle(name, style, rb_iv_get(options, "@params"));
 
       /* Eval styles */
       if(T_HASH == rb_type((styles = rb_iv_get(options, "@styles"))))
-        rb_hash_foreach(styles, RubyForeachStyle, (VALUE)s);
-
+        rb_hash_foreach(styles, RubyForeachStyle, (VALUE)style);
     }
   else rb_raise(rb_eArgError, "Unexpected value type for style `%s'",
     rb_obj_classname(name));
+
+  return Qnil;
+} /* }}} */
+
+/* RubyConfigScreen {{{ */
+/*
+ * call-seq: screen(screenid, blk) -> nil
+ *
+ * Add style values
+ *
+ *  screen 1 do
+ *    virtual [  0, 0, 50, 100 ]
+ *    virtual [ 50, 0, 50, 100 ]
+ *  end
+ */
+
+static VALUE
+RubyConfigScreen(VALUE self,
+  VALUE screenid)
+{
+  rb_need_block();
+
+  /* Check value type */
+  if(FIXNUM_P(screenid))
+    {
+      int idx = FIX2INT(screenid);
+      VALUE klass = Qnil, options = Qnil, params = Qnil, value = Qnil;
+      if(subtle->flags & SUB_SUBTLE_CHECK) return Qnil; ///< Skip on check
+
+      /* Sanity check */
+      if(idx - 1 > subtle->screens->ndata)
+        {
+          rb_raise(rb_eArgError, "Invalid screeen id `%d'", idx);
+
+          return Qnil;
+        }
+
+      /* Collect options */
+      klass   = rb_const_get(mod, rb_intern("Options"));
+      options = rb_funcall(klass, rb_intern("new"), 1, self);
+      rb_obj_instance_eval(0, 0, options);
+      params  = rb_iv_get(options, "@params");
+
+      /* Eval virtuals */
+      if(T_ARRAY == rb_type(value = rb_hash_lookup(params,
+          CHAR2SYM("virtual"))))
+        {
+          int i, count = 0, vgeom[4] = { 0 };
+          VALUE entry = Qnil;
+          SubScreen *s = SCREEN(subArrayGet(subtle->screens, idx - 1));
+
+          if(s && !(s->flags & SUB_SCREEN_VIRTUAL)) ///< Do this just once
+            {
+              for(i = 0; Qnil != (entry = rb_ary_entry(value, i)); i++)
+                {
+                  if(FIXNUM_P(entry))
+                    {
+                      vgeom[count++] = FIX2INT(entry);
+
+                      if(4 == count)
+                        {
+                          SubScreen *vscreen = NULL;
+
+                          vscreen = subScreenNew(
+                            s->geom.x + (s->geom.width *  vgeom[0] / 100),
+                            s->geom.y + (s->geom.height * vgeom[1] / 100),
+                            s->geom.width  * vgeom[2] / 100,
+                            s->geom.height * vgeom[3] / 100);
+                          vscreen->flags |= SUB_SCREEN_VIRTUAL;
+
+                          subArrayInsert(subtle->screens,
+                            (idx++ - 1), (void *)vscreen);
+
+                          count = 0;
+                        }
+                    }
+                }
+
+              subArrayRemove(subtle->screens, (void *)s);
+
+              subScreenResize();
+            }
+        }
+    }
+  else rb_raise(rb_eArgError, "Unexpected value type for screen `%s'",
+    rb_obj_classname(screenid));
 
   return Qnil;
 } /* }}} */
@@ -3500,18 +3460,18 @@ subRubyInit(void)
   config = rb_define_class_under(mod, "Config", rb_cObject);
 
   /* Class methods */
-  rb_define_method(config, "method_missing",         RubyConfigMissing,  -1);
-  rb_define_method(config, "singleton_method_added", RubyConfigAdded,     1);
-  rb_define_method(config, "set",                    RubyConfigSet,       2);
-  rb_define_method(config, "gravity",                RubyConfigGravity,  -1);
-  rb_define_method(config, "grab",                   RubyConfigGrab,     -1);
-  rb_define_method(config, "tag",                    RubyConfigTag,      -1);
-  rb_define_method(config, "view",                   RubyConfigView,     -1);
-  rb_define_method(config, "on",                     RubyConfigOn,       -1);
-  rb_define_method(config, "sublet",                 RubyConfigSublet,    1);
-  rb_define_method(config, "screen",                 RubyConfigScreen,    1);
-  rb_define_method(config, "style",                  RubyConfigStyle,     1);
-  rb_define_method(config, "load_config",            RubyConfigLoadConfig,  1);
+  rb_define_method(config, "method_missing",         RubyConfigMissing,    -1);
+  rb_define_method(config, "singleton_method_added", RubyConfigAdded,       1);
+  rb_define_method(config, "set",                    RubyConfigSet,         2);
+  rb_define_method(config, "gravity",                RubyConfigGravity,    -1);
+  rb_define_method(config, "grab",                   RubyConfigGrab,       -1);
+  rb_define_method(config, "tag",                    RubyConfigTag,        -1);
+  rb_define_method(config, "view",                   RubyConfigView,       -1);
+  rb_define_method(config, "on",                     RubyConfigOn,         -1);
+  rb_define_method(config, "sublet",                 RubyConfigSublet,      1);
+  rb_define_method(config, "style",                  RubyConfigStyle,       1);
+  rb_define_method(config, "screen",                 RubyConfigScreen,      1);
+  rb_define_method(config, "load_config",            RubyConfigLoadConfig , 1);
 
   /*
    * Document-class: Options
@@ -3522,16 +3482,14 @@ subRubyInit(void)
   options = rb_define_class_under(mod, "Options", rb_cObject);
 
   /* Params list */
-  rb_define_attr(options, "params", 1, 1);
-  rb_define_attr(options, "styles", 1, 1);
+  rb_define_attr(options, "params", 1, 1); ///< Cought parameters
+  rb_define_attr(options, "styles", 1, 1); ///< Nest styles
 
   /* Class methods */
   rb_define_method(options, "initialize",     RubyOptionsInit,        1);
-  rb_define_method(options, "match",          RubyOptionsMatch,       1);
+  rb_define_method(options, "method_missing", RubyOptionsDispatcher, -1);
   rb_define_method(options, "gravity",        RubyOptionsGravity,     1);
   rb_define_method(options, "style",          RubyOptionsStyle,       1);
-  rb_define_method(options, "on_match",       RubyOptionsOnMatch,    -1);
-  rb_define_method(options, "method_missing", RubyOptionsDispatcher, -1);
 
   /*
    * Document-class: Subtle::Sublet
@@ -3595,16 +3553,17 @@ subRubyLoadConfig(void)
   subStyleReset(&subtle->styles.sublets,   -1);
   subStyleReset(&subtle->styles.separator, -1);
   subStyleReset(&subtle->styles.clients,    0);
-  subStyleReset(&subtle->styles.subtle,     0);
+  subStyleReset(&subtle->styles.panel_top,  0);
+  subStyleReset(&subtle->styles.panel_bot,  0);
+  subStyleReset(&subtle->styles.tray,       0);
 
   /* Reset values */
   subtle->gravity           = -1;
-  subtle->styles.subtle.bg  = -1; ///< Must be -1 for wallpaper
   subtle->styles.urgent     = NULL;
   subtle->styles.occupied   = NULL;
   subtle->styles.focus      = NULL;
-  subtle->styles.viewsep    = NULL;
-  subtle->styles.subletsep  = NULL;
+  subtle->styles.view_sep   = NULL;
+  subtle->styles.sublet_sep = NULL;
 
   /* Create and register config values */
   config_sublets = rb_hash_new();

@@ -29,9 +29,9 @@ subViewNew(char *name,
 
   /* Create new view */
   v = VIEW(subSharedMemoryAlloc(1, sizeof(SubView)));
-  v->flags = SUB_TYPE_VIEW;
+  v->flags   = SUB_TYPE_VIEW;
   v->styleid = -1;
-  v->name  = strdup(name);
+  v->name    = strdup(name);
 
   /* Tags */
   if(tags && strncmp("", tags, 1))

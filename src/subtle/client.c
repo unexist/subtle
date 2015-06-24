@@ -240,12 +240,12 @@ ClientZaphod(SubClient *c,
   int i, flags = (SUB_SCREEN_PANEL1|SUB_SCREEN_PANEL2);
 
   /* Update bounds according to styles */
-  bounds->x      = subtle->styles.subtle.padding.left;
-  bounds->y      = subtle->styles.subtle.padding.top;
-  bounds->width  = subtle->width - subtle->styles.subtle.padding.left -
-    subtle->styles.subtle.padding.right;
-  bounds->height = subtle->height - subtle->styles.subtle.padding.top -
-    subtle->styles.subtle.padding.bottom;
+  bounds->x      = subtle->styles.clients.padding.left;
+  bounds->y      = subtle->styles.clients.padding.top;
+  bounds->width  = subtle->width - subtle->styles.clients.padding.left -
+    subtle->styles.clients.padding.right;
+  bounds->height = subtle->height - subtle->styles.clients.padding.top -
+    subtle->styles.clients.padding.bottom;
 
   /* Iterate over screens to find fitting square */
   for(i = 0; i < subtle->screens->ndata; i++)
@@ -1356,14 +1356,14 @@ subClientSetStrut(SubClient *c)
     {
       if(4 == size) ///< Only complete struts
         {
-          subtle->styles.subtle.padding.left   =
-            MAX(subtle->styles.subtle.padding.left, strut[0]);
-          subtle->styles.subtle.padding.right  =
-            MAX(subtle->styles.subtle.padding.right, strut[1]);
-          subtle->styles.subtle.padding.top    = 
-            MAX(subtle->styles.subtle.padding.top, strut[2]);
-          subtle->styles.subtle.padding.bottom =
-            MAX(subtle->styles.subtle.padding.bottom, strut[3]);
+          subtle->styles.clients.padding.left   =
+            MAX(subtle->styles.clients.padding.left, strut[0]);
+          subtle->styles.clients.padding.right  =
+            MAX(subtle->styles.clients.padding.right, strut[1]);
+          subtle->styles.clients.padding.top    = 
+            MAX(subtle->styles.clients.padding.top, strut[2]);
+          subtle->styles.clients.padding.bottom =
+            MAX(subtle->styles.clients.padding.bottom, strut[3]);
 
           /* Update screen and clients */
           subScreenResize();
