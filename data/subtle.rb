@@ -51,29 +51,24 @@ set :skip_urgent_warp, false
 # set :wmname, "LG3D"
 
 #
-# == Screen
+# == Styles
 #
-# Generally subtle comes with two panels per screen, one on the top and one at
-# the bottom. Each panel can be configured with different panel items and
-# sublets screen wise. The default config uses top panel on the first screen
-# only, it's up to the user to enable the bottom panel or disable either one
-# or both.
-
-# === Properties
+# Styles define various properties of styleable items in a CSS-like syntax.
 #
-# [*stipple*]    This property adds a stipple pattern to both screen panels.
+# Following properties are available for most the styles:
 #
-#                Example: stipple "~/stipple.xbm"
-#                         stipple Subtlext::Icon.new("~/stipple.xbm")
+# [*foreground*] Foreground text color
+# [*background*] Background color
+# [*margin*]     Outer spacing
+# [*border*]     Border color and size
+# [*padding*]    Inner spacing
+# [*font*]       Font string (xftontsel or xft)
 #
-# [*top*]        This property adds a top panel to the screen.
-#
-#                Example: top [ :views, :title ]
-#
-# [*bottom*]     This property adds a bottom panel to the screen.
-#
-#                Example: bottom [ :views, :title ]
-
+# The styles also define the styling and appearance of the two possible
+# panels per screen in subtle. Each panel can be configured with different
+# panel items and sublets screen wise. The default config uses top panel
+# on the first screen only, it's up to the user to enable the bottom panel or
+# disable either one # or both.
 #
 # Following items are available for the panels:
 #
@@ -86,46 +81,14 @@ set :skip_urgent_warp, false
 # [*:spacer*]    Variable spacer (free width / count of spacers)
 # [*:center*]    Enclose items with :center to center them on the panel
 # [*:separator*] Insert separator
-#
+
 # Empty panels are hidden.
 #
 # === Links
 #
+# http://subforge.org/projects/subtle/wiki/Styles
 # http://subforge.org/projects/subtle/wiki/Multihead
 # http://subforge.org/projects/subtle/wiki/Panel
-#
-
-screen 1 do
-  top    [ :views, :title, :spacer, :keychain, :spacer, :tray, :sublets ]
-  bottom [ ]
-end
-
-# Example for a second screen:
-#screen 2 do
-#  top    [ :views, :title, :spacer ]
-#  bottom [ ]
-#end
-
-#
-# == Styles
-#
-# Styles define various properties of styleable items in a CSS-like syntax.
-#
-# If no background color is given no color will be set. This will ensure a
-# custom background pixmap won't be overwritten.
-#
-# Following properties are available for most the styles:
-#
-# [*foreground*] Foreground text color
-# [*background*] Background color
-# [*margin*]     Outer spacing
-# [*border*]     Border color and size
-# [*padding*]    Inner spacing
-# [*font*]       Font string (xftontsel or xft)
-#
-# === Link
-#
-# http://subforge.org/projects/subtle/wiki/Styles
 
 # Style for all style elements
 style :all do
@@ -181,12 +144,18 @@ style :clients do
   width     50
 end
 
-# Style for subtle
-style :subtle do
-  margin      0, 0, 0, 0
-  panel       "#202020"
-  background  "#3d3d3d"
-  stipple     "#757575"
+# Style for top panels
+style :panel_top do
+  background  "#202020"
+  screen 1, [ :views, :title, :spacer, :keychain, :spacer, :tray, :sublets ]
+  #screen 2, [ :views ]
+end
+
+# Style for bottom panels
+style :panel_bottom do
+  background  "#202020"
+  screen 1, [ ]
+  #screen 2, [ ]
 end
 
 #
@@ -610,18 +579,17 @@ tag "browser", "uzbl|opera|firefox|navigator"
 
 # Placement
 tag "editor" do
-  match  "[g]?vim"
-  resize true
+  match "[g]?vim"
 end
 
 tag "fixed" do
   geometry [ 10, 10, 100, 100 ]
-  stick    true
+  set :sticky
 end
 
 tag "resize" do
   match  "sakura|gvim"
-  resize true
+  set :resize
 end
 
 tag "gravity" do
@@ -631,13 +599,12 @@ end
 # Modes
 tag "stick" do
   match "mplayer"
-  float true
-  stick true
+  set :floating, :sticky
 end
 
 tag "float" do
   match "display"
-  float true
+  set :floating
 end
 
 # Gimp
