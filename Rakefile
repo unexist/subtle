@@ -3,7 +3,7 @@
 # @package subtle
 #
 # @file Rake build file
-# @copyright (c) 2005-2013 Christoph Kappel <unexist@subforge.org>
+# @copyright (c) 2005-2017 Christoph Kappel <unexist@subforge.org>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPL.
@@ -393,29 +393,35 @@ task(:config) do
 
     # Check pkg-config for Xft
     if "yes" == @options["xft"]
-      checking_for("X11/Xft/Xft.h") do
-        ret = false
+      {
+        "freetype": "freetype2/ftbuild.h",
+        "xft":      "X11/Xft/Xft.h"
+      }.each do |pkg, header|
+        checking_for(header) do
+          ret = false
 
-        cflags, ldflags, libs = pkg_config("xft")
+          cflags, ldflags, libs = pkg_config(pkg)
 
-        # Fix a bug in ruby 2.2.0 (https://bugs.ruby-lang.org/issues/10651)
-        if cflags.empty?
-          cflags << `#{$PKGCONFIG} --cflags xft`.chomp
+          # Fix a bug in ruby 2.2.0 (https://bugs.ruby-lang.org/issues/10651)
+          if cflags.empty?
+            cflags << `#{$PKGCONFIG} --cflags xft`.chomp
+          end
+
+          unless libs.nil?
+            # Update flags
+            @options["cpppath"] << " %s" % [ cflags ]
+            @options["ldflags"] << " %s %s" % [ ldflags, libs ]
+            @options["extflags"] << " %s %s" % [ ldflags, libs ]
+
+            $defs.push("-DHAVE_X11_XFT_XFT_H")
+            ret = true
+          else
+            @options["xft"] = "no"
+          end
+
+          ret
+
         end
-
-        unless libs.nil?
-          # Update flags
-          @options["cpppath"] << " %s" % [ cflags ]
-          @options["ldflags"] << " %s %s" % [ ldflags, libs ]
-          @options["extflags"] << " %s %s" % [ ldflags, libs ]
-
-          $defs.push("-DHAVE_X11_XFT_XFT_H")
-          ret = true
-        else
-          @options["xft"] = "no"
-        end
-
-        ret
       end
     end
 
