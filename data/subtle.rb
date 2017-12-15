@@ -780,22 +780,23 @@ view "dev",   "editor"
 # Following hooks exist so far:
 #
 # [*:client_create*]    Called whenever a window is created
-# [*:client_configure*] Called whenever a window is configured
+# [*:client_gravity*]   Called whenever a window is configured
+# [*:client_mode*]      Called whenever a window is configured
 # [*:client_focus*]     Called whenever a window gets focus
+# [*:client_rename*]    Called whenever a window is renamed
 # [*:client_kill*]      Called whenever a window is killed
 #
 # [*:tag_create*]       Called whenever a tag is created
 # [*:tag_kill*]         Called whenever a tag is killed
 #
 # [*:view_create*]      Called whenever a view is created
-# [*:view_configure*]   Called whenever a view is configured
-# [*:view_jump*]        Called whenever the view is switched
+# [*:view_focus*]       Called whenever a view is configured
 # [*:view_kill*]        Called whenever a view is killed
 #
-# [*:tile*]             Called on whenever tiling would be needed
-# [*:reload*]           Called on reload
 # [*:start*]            Called on start
 # [*:exit*]             Called on exit
+# [*:tile*]             Called on whenever tiling would be needed
+# [*:reload*]           Called on reload
 #
 # === Example
 #
