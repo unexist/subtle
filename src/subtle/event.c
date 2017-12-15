@@ -1501,6 +1501,10 @@ EventProperty(XPropertyEvent *ev)
                 subScreenUpdate();
                 subScreenRender();
               }
+
+            /* Hook: Rename */
+            subHookCall((SUB_HOOK_TYPE_CLIENT|SUB_HOOK_ACTION_RENAME),
+              (void *)c);
           }
         break; /* }}} */
       case SUB_EWMH_WM_NORMAL_HINTS: /* {{{ */
@@ -1578,7 +1582,7 @@ EventProperty(XPropertyEvent *ev)
 #endif
 } /* }}} */
 
-/* EventSelft on heection {{{ */
+/* EventSelection {{{ */
 void
 EventSelection(XSelectionClearEvent *ev)
 {

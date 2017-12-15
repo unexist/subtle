@@ -213,7 +213,8 @@
 #define SUB_HOOK_ACTION_MODE          (1L << 18)                  ///< Mode action
 #define SUB_HOOK_ACTION_GRAVITY       (1L << 19)                  ///< Gravity action
 #define SUB_HOOK_ACTION_FOCUS         (1L << 20)                  ///< Focus action
-#define SUB_HOOK_ACTION_KILL          (1L << 21)                  ///< Kill action
+#define SUB_HOOK_ACTION_RENAME        (1L << 21)                  ///< Rename action
+#define SUB_HOOK_ACTION_KILL          (1L << 22)                  ///< Kill action
 
 /* Client flags */
 #define SUB_CLIENT_DEAD               (1L << 10)                  ///< Dead window
