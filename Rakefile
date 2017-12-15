@@ -394,8 +394,8 @@ task(:config) do
     # Check pkg-config for Xft
     if "yes" == @options["xft"]
       {
-        "freetype": "freetype2/ftbuild.h",
-        "xft":      "X11/Xft/Xft.h"
+        "freetype" => "freetype2/ftbuild.h",
+        "xft"      => "X11/Xft/Xft.h"
       }.each do |pkg, header|
         checking_for(header) do
           ret = false
