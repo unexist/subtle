@@ -63,9 +63,9 @@ end
   "hdrdir"     => "",
   "archdir"    => "",
   "revision"   => "3224", #< Latest stable
-  "cflags"     => "-Wall -Werror -Wpointer-arith -Wstrict-prototypes -Wunused -Wshadow -std=gnu99",
-  "cpppath"    => "-I. -I$(builddir) -Isrc -Isrc/shared -Isrc/subtle -idirafter$(hdrdir) -idirafter$(archdir)",
-  "ldflags"    => "$(rpath) -L$(libdir) $(LIBS) -l$(RUBY_SO_NAME)",
+  "cflags"     => "-Wall -Wpointer-arith -Wstrict-prototypes -Wunused -Wshadow -std=gnu99 " + (ENV["CFLAGS"] || ""),
+  "cpppath"    => "-I. -I$(builddir) -Isrc -Isrc/shared -Isrc/subtle -idirafter$(hdrdir) -idirafter$(archdir) " + (ENV["CPPFLAGS"] || ""),
+  "ldflags"    => "$(rpath) -L$(libdir) $(LIBS) -l$(RUBY_SO_NAME) " + (ENV["LDFLAGS"] || ""),
   "extflags"   => "$(LDFLAGS) $(rpath) $(LIBS) -l$(RUBY_SO_NAME)",
   "rpath"      => "-L$(libdir) -Wl,-rpath=$(libdir)",
   "checksums"  => []
@@ -393,23 +393,35 @@ task(:config) do
 
     # Check pkg-config for Xft
     if "yes" == @options["xft"]
-      checking_for("X11/Xft/Xft.h") do
-        ret = false
+      {
+        "freetype": "freetype2/ftbuild.h",
+        "xft":      "X11/Xft/Xft.h"
+      }.each do |pkg, header|
+        checking_for(header) do
+          ret = false
 
-        cflags, ldflags, libs = pkg_config("xft")
-        unless libs.nil?
-          # Update flags
-          @options["cpppath"] << " %s" % [ cflags ]
-          @options["ldflags"] << " %s %s" % [ ldflags, libs ]
-          @options["extflags"] << " %s %s" % [ ldflags, libs ]
+          cflags, ldflags, libs = pkg_config(pkg)
 
-          $defs.push("-DHAVE_X11_XFT_XFT_H")
-          ret = true
-        else
-          @options["xft"] = "no"
+          # Fix a bug in ruby 2.2.0 (https://bugs.ruby-lang.org/issues/10651)
+          if cflags.empty?
+            cflags << `#{$PKGCONFIG} --cflags xft`.chomp
+          end
+
+          unless libs.nil?
+            # Update flags
+            @options["cpppath"] << " %s" % [ cflags ]
+            @options["ldflags"] << " %s %s" % [ ldflags, libs ]
+            @options["extflags"] << " %s %s" % [ ldflags, libs ]
+
+            $defs.push("-DHAVE_X11_XFT_XFT_H")
+            ret = true
+          else
+            @options["xft"] = "no"
+          end
+
+          ret
+
         end
-
-        ret
       end
     end
 
