@@ -3,7 +3,7 @@
   * @package subtle
   *
   * @file Client functions
-  * @copyright (c) 2005-2013 Christoph Kappel <unexist@subforge.org>
+  * @copyright (c) 2005-2017 Christoph Kappel <unexist@subforge.org>
   * @version $Id$
   *
   * This program can be distributed under the terms of the GNU GPLv2.
@@ -101,8 +101,8 @@ ClientBounds(SubClient *c,
       /* Center client on current gravity */
       if(!(c->flags & SUB_CLIENT_MODE_FLOAT))
         {
-          geom->x += 0 < diffw ? diffw / 2 : 0;
-          geom->y += 0 < diffh ? diffh / 2 : 0;
+          geom->x += 0 < diffw ? (diffw / 2) : 0;
+          geom->y += 0 < diffh ? (diffh / 2) : 0;
         }
 
       geom->width  -= diffw;
@@ -1060,17 +1060,15 @@ subClientArrange(SubClient *c,
     {
       if(c->flags & SUB_CLIENT_ARRANGE || (-1 != screenid && c->screenid != screenid))
         {
-          SubScreen *s2 = SCREEN(subArrayGet(subtle->screens,
+          SubScreen *old_s = SCREEN(subArrayGet(subtle->screens,
             -1 != c->screenid ? c->screenid : 0));
 
           /* Update screen offsets */
-          if(s != s2)
+          if(screenid != c->screenid)
             {
-              c->geom.x      = c->geom.x - s2->geom.x + s->geom.x;
-              c->geom.y      = c->geom.y - s2->geom.y + s->geom.y;
-              c->geom.width  = c->geom.width;
-              c->geom.height = c->geom.height;
-              c->screenid    = screenid;
+              c->geom.x   = c->geom.x - old_s->geom.x + s->geom.x;
+              c->geom.y   = c->geom.y - old_s->geom.y + s->geom.y;
+              c->screenid = screenid;
             }
 
           /* Finally resize window */
@@ -1142,6 +1140,9 @@ subClientArrange(SubClient *c,
             (void *)c);
         }
     }
+
+  /* Remove arrange flag */
+  c->flags &= ~SUB_CLIENT_ARRANGE;
 } /* }}} */
 
  /** subClientToggle {{{

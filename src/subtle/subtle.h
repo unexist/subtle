@@ -3,7 +3,7 @@
   * @package subtle
   *
   * @file Header file
-  * @copyright Copyright (c) 2005-2013 Christoph Kappel <unexist@subforge.org>
+  * @copyright (c) 2005-2017 Christoph Kappel <unexist@subforge.org>
   * @version $Id$
   *
   * This program can be distributed under the terms of the GNU GPLv2.
@@ -213,7 +213,8 @@
 #define SUB_HOOK_ACTION_MODE          (1L << 18)                  ///< Mode action
 #define SUB_HOOK_ACTION_GRAVITY       (1L << 19)                  ///< Gravity action
 #define SUB_HOOK_ACTION_FOCUS         (1L << 20)                  ///< Focus action
-#define SUB_HOOK_ACTION_KILL          (1L << 21)                  ///< Kill action
+#define SUB_HOOK_ACTION_RENAME        (1L << 21)                  ///< Rename action
+#define SUB_HOOK_ACTION_KILL          (1L << 22)                  ///< Kill action
 
 /* Client flags */
 #define SUB_CLIENT_DEAD               (1L << 10)                  ///< Dead window

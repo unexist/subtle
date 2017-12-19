@@ -3,7 +3,7 @@
   * @package subtle
   *
   * @file Event functions
-  * @copyright (c) 2005-2013 Christoph Kappel <unexist@subforge.org>
+  * @copyright (c) 2005-2017 Christoph Kappel <unexist@subforge.org>
   * @version $Id$
   *
   * This program can be distributed under the terms of the GNU GPLv2.
@@ -1501,6 +1501,10 @@ EventProperty(XPropertyEvent *ev)
                 subScreenUpdate();
                 subScreenRender();
               }
+
+            /* Hook: Rename */
+            subHookCall((SUB_HOOK_TYPE_CLIENT|SUB_HOOK_ACTION_RENAME),
+              (void *)c);
           }
         break; /* }}} */
       case SUB_EWMH_WM_NORMAL_HINTS: /* {{{ */

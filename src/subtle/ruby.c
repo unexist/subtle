@@ -3,7 +3,7 @@
   * @package subtle
   *
   * @file Ruby functions
-  * @copyright (c) 2005-2013 Christoph Kappel <unexist@subforge.org>
+  * @copyright (c) 2005-2017 Christoph Kappel <unexist@subforge.org>
   * @version $Id$
   *
   * This program can be distributed under the terms of the GNU GPLv2.
@@ -558,6 +558,7 @@ RubyEvalHook(VALUE event,
     { CHAR2SYM("client_mode"),    (SUB_HOOK_TYPE_CLIENT|SUB_HOOK_ACTION_MODE)    },
     { CHAR2SYM("client_gravity"), (SUB_HOOK_TYPE_CLIENT|SUB_HOOK_ACTION_GRAVITY) },
     { CHAR2SYM("client_focus"),   (SUB_HOOK_TYPE_CLIENT|SUB_HOOK_ACTION_FOCUS)   },
+    { CHAR2SYM("client_rename"),  (SUB_HOOK_TYPE_CLIENT|SUB_HOOK_ACTION_RENAME)  },
     { CHAR2SYM("client_kill"),    (SUB_HOOK_TYPE_CLIENT|SUB_HOOK_ACTION_KILL)    },
     { CHAR2SYM("tag_create"),     (SUB_HOOK_TYPE_TAG|SUB_HOOK_ACTION_CREATE)     },
     { CHAR2SYM("tag_kill"),       (SUB_HOOK_TYPE_TAG|SUB_HOOK_ACTION_KILL)       },
