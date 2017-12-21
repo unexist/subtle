@@ -134,7 +134,7 @@ subTagNew(char *name,
   * @param[in]  t        A #SubTag
   * @param[in]  type     Matcher type
   * @param[in]  pattern  Regex
-  * @param[in]  and      Logical AND with last matcher
+  * @param[in]  and      Whether matcher is a logical AND with previous
   **/
 
 void

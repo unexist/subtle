@@ -292,10 +292,10 @@ subPanelUpdate(SubPanel *p)
               }
 
             /* Add width of view separator if any */
-            if(subtle->styles.viewsep)
+            if(subtle->styles.view_sep)
               {
                 p->width += (subtle->views->ndata - 1) *
-                  subtle->styles.viewsep->separator->width;
+                  subtle->styles.view_sep->separator->width;
               }
           }
         break; /* }}} */
@@ -457,11 +457,11 @@ subPanelRender(SubPanel *p,
                 vx += v->width;
 
                 /* Draw view separator if any */
-                if(subtle->styles.viewsep && i < subtle->views->ndata - 1)
+                if(subtle->styles.view_sep && i < subtle->views->ndata - 1)
                   {
-                    PanelSeparator(vx, subtle->styles.viewsep, drawable);
+                    PanelSeparator(vx, subtle->styles.view_sep, drawable);
 
-                    vx += subtle->styles.viewsep->separator->width;
+                    vx += subtle->styles.view_sep->separator->width;
                   }
               }
           }
@@ -471,8 +471,8 @@ subPanelRender(SubPanel *p,
   /* Draw separator after panel */
   if(p->flags & SUB_PANEL_SEPARATOR2 && subtle->styles.separator.separator)
     {
-      SubStyle *s = p->flags & SUB_PANEL_SUBLET && subtle->styles.subletsep ?
-        subtle->styles.subletsep : &subtle->styles.separator;
+      SubStyle *s = p->flags & SUB_PANEL_SUBLET && subtle->styles.sublet_sep ?
+        subtle->styles.sublet_sep : &subtle->styles.separator;
 
       PanelSeparator(p->x + p->width, s, drawable);
     }
@@ -596,8 +596,8 @@ subPanelAction(SubArray *panels,
                           }
 
                         /* Add view separator width if any */
-                        if(subtle->styles.viewsep)
-                          vx += v->width + subtle->styles.viewsep->separator->width;
+                        if(subtle->styles.view_sep)
+                          vx += v->width + subtle->styles.view_sep->separator->width;
                         else vx += v->width;
                       }
                   }
