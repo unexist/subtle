@@ -68,10 +68,10 @@ ScreenPublish(void)
 /* ScreenClear {{{ */
 static void
 ScreenClear(SubScreen *s,
-  unsigned long col)
+  SubStyle *style)
 {
   /* Clear pixmap */
-  XSetForeground(subtle->dpy, subtle->gcs.draw, col);
+  XSetForeground(subtle->dpy, subtle->gcs.draw, style->bg);
   XFillRectangle(subtle->dpy, s->drawable, subtle->gcs.draw,
     0, 0, s->base.width, subtle->ph);
 
@@ -80,8 +80,10 @@ ScreenClear(SubScreen *s,
     {
       XGCValues gvals;
 
-      gvals.stipple = s->stipple;
-      XChangeGC(subtle->dpy, subtle->gcs.stipple, GCStipple, &gvals);
+      gvals.stipple    = style->icon;
+      gvals.foreground = style->fg;
+      XChangeGC(subtle->dpy, subtle->gcs.stipple,
+        GCForeground|GCStipple, &gvals);
 
       XFillRectangle(subtle->dpy, s->drawable, subtle->gcs.stipple,
         0, 0, s->base.width, subtle->ph);
@@ -195,7 +197,6 @@ subScreenNew(int x,
   s->geom.width  = width;
   s->geom.height = height;
   s->base        = s->geom; ///< Backup size
-  s->viewid      = subtle->screens->ndata; ///< Init
 
   /* Create panel windows */
   sattrs.event_mask        = ButtonPressMask|EnterWindowMask|
@@ -552,7 +553,7 @@ subScreenRender(void)
       SubScreen *s = SCREEN(subtle->screens->data[i]);
       Window panel = s->panel1;
 
-      ScreenClear(s, subtle->styles.subtle.top);
+      ScreenClear(s, &subtle->styles.panel_top);
 
       /* Render panel items */
       for(j = 0; s->panels && j < s->panels->ndata; j++)
@@ -565,7 +566,7 @@ subScreenRender(void)
               XCopyArea(subtle->dpy, s->drawable, panel, subtle->gcs.draw,
                 0, 0, s->base.width, subtle->ph, 0, 0);
 
-              ScreenClear(s, subtle->styles.subtle.bottom);
+              ScreenClear(s, &subtle->styles.panel_bot);
               panel = s->panel2;
             }
 
@@ -598,12 +599,12 @@ subScreenResize(void)
       SubScreen *s = SCREEN(subtle->screens->data[i]);
 
       /* Add strut */
-      s->geom.x      = s->base.x + subtle->styles.subtle.padding.left;
-      s->geom.y      = s->base.y + subtle->styles.subtle.padding.top;
-      s->geom.width  = s->base.width - subtle->styles.subtle.padding.left -
-        subtle->styles.subtle.padding.right;
-      s->geom.height = s->base.height - subtle->styles.subtle.padding.top -
-        subtle->styles.subtle.padding.bottom;
+      s->geom.x      = s->base.x + subtle->styles.clients.padding.left;
+      s->geom.y      = s->base.y + subtle->styles.clients.padding.top;
+      s->geom.width  = s->base.width - subtle->styles.clients.padding.left -
+        subtle->styles.clients.padding.right;
+      s->geom.height = s->base.height - subtle->styles.clients.padding.top -
+        subtle->styles.clients.padding.bottom;
 
       /* Update panels */
       if(s->flags & SUB_SCREEN_PANEL1)

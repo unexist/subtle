@@ -243,21 +243,14 @@ subDisplayConfigure(void)
   assert(subtle);
 
   /* Update GCs */
-  gvals.foreground = subtle->styles.subtle.fg;
   gvals.line_width = subtle->styles.clients.border.top;
-  XChangeGC(subtle->dpy, subtle->gcs.stipple,
-    GCForeground|GCLineWidth, &gvals);
+  XChangeGC(subtle->dpy, subtle->gcs.stipple, GCLineWidth, &gvals);
 
   /* Update windows */
   XSetWindowBackground(subtle->dpy, subtle->windows.tray,
-    subtle->styles.subtle.top);
-
-  /* Set background if set */
-  if(-1 != subtle->styles.subtle.bg)
-    XSetWindowBackground(subtle->dpy, ROOT, subtle->styles.subtle.bg);
+    subtle->styles.tray.bg);
 
   XClearWindow(subtle->dpy, subtle->windows.tray);
-  XClearWindow(subtle->dpy, ROOT);
 
   /* Update struts and panels */
   subScreenResize();
@@ -315,7 +308,7 @@ subDisplayPublish(void)
   int pos = 0;
   unsigned long *colors;
 
-#define NCOLORS 54
+#define NCOLORS 56
 
   /* Create color array */
   colors = (unsigned long *)subSharedMemoryAlloc(NCOLORS,
@@ -335,13 +328,11 @@ subDisplayPublish(void)
 
   DisplayStyleToColor(&subtle->styles.sublets,   colors, &pos);
   DisplayStyleToColor(&subtle->styles.separator, colors, &pos);
+  DisplayStyleToColor(&subtle->styles.panel_top, colors, &pos);
+  DisplayStyleToColor(&subtle->styles.panel_bot, colors, &pos);
 
   colors[pos++] = subtle->styles.clients.fg; ///< Active
   colors[pos++] = subtle->styles.clients.bg; ///< Inactive
-  colors[pos++] = subtle->styles.subtle.top;
-  colors[pos++] = subtle->styles.subtle.bottom;
-  colors[pos++] = subtle->styles.subtle.bg;
-  colors[pos++] = subtle->styles.subtle.fg;  ///< Stipple
 
   /* EWMH: Colors */
   subEwmhSetCardinals(ROOT, SUB_EWMH_SUBTLE_COLORS, (long *)colors, NCOLORS);
