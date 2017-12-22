@@ -455,13 +455,15 @@ end
 #
 # Modes can be set with the set option, see below.
 #
-# [*borderless*] Remove any borders around tagged clients
+# [*borderless*] Enable the borderless mode for tgagged clients. When set, any borders
+#                around tagged clients are absent.
 #
 #                Example: set :borderless
 #                Links:    http://subforge.org/projects/subtle/wiki/Tagging#Borderless
 #                          http://subforge.org/projects/subtle/wiki/Clients#Borderless
 #
-# [*fixed*]      Enable the fixed mode for tagged clients.
+# [*fixed*]      Enable the fixed mode for tagged clients. When set, the client cannot be
+#                resized anymore.
 #
 #                Example: set :fixed
 #                Links:   http://subforge.org/projects/subtle/wiki/Tagging#Fixed
@@ -470,16 +472,17 @@ end
 # [*floating*]   Enables the float mode for tagged clients.
 #
 #                Example: set :floating
-#                Links:   http://subforge.org/projects/subtle/wiki/Tagging#Float
+#                Links:   http://subforge.org/projects/subtle/wiki/Tagging#Floating
 #                         http://subforge.org/projects/subtle/wiki/Clients#Floating
 #
-# [*full*]       Enable the fullscreen mode for tagged clients.
+# [*full*]       Enable the fullscreen mode for tagged clients. When set, the client
+#                covers the whole screen size.
 #
 #                Example: set :full
 #                Links:   http://subforge.org/projects/subtle/wiki/Tagging#Fullscreen
 #                         http://subforge.org/projects/subtle/wiki/Clients#Fullscreen
 #
-# [*resize*]     Enable floating mode for tagged clients. When set, subtle honors size
+# [*resize*]     Enable resize mode for tagged clients. When set, subtle honors size
 #                hints, that define various size constraints like sizes for columns
 #                and rows of a terminal.
 #
@@ -487,7 +490,13 @@ end
 #                Links:   http://subforge.org/projects/subtle/wiki/Tagging#Resize
 #                         http://subforge.org/projects/subtle/wiki/Clients#Resize
 #
-# [*urgent*]     Enabls the urgent mode for tagged clients. When set, subtle
+# [*sticky*]     Enable sticky mode for tagged clients. When set, subtle keeps the
+#                client on the current screen, regardless of the tags.
+#
+#                Example: set :sticky
+#                Links:  http://subforge.org/projects/subtle/wiki/Tagging#Sticky
+#
+# [*urgent*]     Enables the urgent mode for tagged clients. When set, subtle
 #                automatically sets this client to urgent.
 #
 #                Urgent usually means the window requires immediate attention like
@@ -506,7 +515,10 @@ end
 #
 # === Options
 #
-# [*set*]        
+# [*set*]        Set various modes to the tagged client. Multiple modes can be set,
+#                separated by comma. (See Modes)
+#
+#                Example: set :floating, :sticky
 #
 # [*geometry*]   Set a certain geometry for the tagged client and put it in
 #                floating mode, but only on views that have this tag in common. 
@@ -524,10 +536,10 @@ end
 #
 # [*match*]      Add matching patterns to a tag, this can be done more than once.
 #
-#                Matching works either via plaintext, regex (see man regex(7)) or
-#                window id. Per default tags will only match the WM_NAME and the
-#                WM_CLASS portion of a client, this can be changed with following
-#                possible values:
+#                Matching works either via plaintext, regular expressions
+#                (see man regex(7)) or window id. Per default tags will only match
+#                the WM_NAME and the  WM_CLASS portion of a client, this can be
+#                changed with following possible values:
 #
 #                [*:name*]      Match the WM_NAME
 #                [*:instance*]  Match the first (instance) part from WM_CLASS
@@ -540,14 +552,27 @@ end
 #                          match "[xa]+term"
 #                Link:     http://subforge.org/projects/subtle/wiki/Tagging#Match
 #
-# [*position*]   Similar to the geometry property, this option sets the x/y
-#                coordinates of the tagged client for views with common tags.
+# [*on_match*]   Add a Ruby proc that is executed when this tag matches
+#
+#                Example: 
+#
+#                tag "gimp" do
+#                  match role: "gimp.*"
+#
+#                  on_match do |c|
+#                    c.gravity = ("gimp_" + c.role.split("-")[1]).to_sym
+#                   end
+#                 end
+#
+# [*position*]   Similar to the geometry option, set the x/y coordinates of the
+#                tagged client for views with common tags.
+#
 #                Expected is an array with x and y values.
 #
 #                Example: position [ 10, 10 ]
 #                Link:    http://subforge.org/projects/subtle/wiki/Tagging#Position
 #
-# [*stick_to*]   Stick a tagged client to the given screen. When set, clients are
+# [*stick_to*]   Keep a tagged client on the given screen. When set, clients are
 #                visible on all views, even when they don't have matching tags.
 #
 #                On multihead, sticky clients keep the screen they are assigned to.
