@@ -1688,12 +1688,8 @@ RubyObjectDispatcher(VALUE self,
 
 /* RubyOptionsInit {{{ */
 /*
- * call-seq: init -> Subtle::Options
- *
- * Create a new Options object
- *
- *  options = Subtle::Options.new
- *  => #<Subtle::Options:xxx>
+ * :nodoc:
+ * Init DSL dispatcher
  */
 
 static VALUE
@@ -1706,6 +1702,7 @@ RubyOptionsInit(VALUE self)
 
 /* RubyOptionsDispatcher {{{ */
 /*
+ * :nodoc:
  * Dispatcher for DSL proc methods - internal use only
  */
 
@@ -1777,12 +1774,8 @@ RubyOptionsDispatcher(int argc,
 
 /* RubyOptionsGravity {{{ */
 /*
- * call-seq: gravity -> nil
- *
+ * :nodoc:
  * Overwrite global gravity method
- *
- *  option.gravity :center
- *  => nil
  */
 
 static VALUE
@@ -1797,14 +1790,8 @@ RubyOptionsGravity(VALUE self,
 
 /* RubyOptionsStyle {{{ */
 /*
- * call-seq: style(name) -> nil
- *
+ * :nodoc:
  * Overwrite global style method
- *
- *  option.style :urgent do
- *    foreground "#fecf35"
- *  end
- *  => nil
  */
 
 static VALUE
@@ -1845,6 +1832,7 @@ RubyOptionsStyle(VALUE self,
 
 /* RubyConfigMissing {{{ */
 /*
+ * :nodoc:
  * Check error of missing methods
  */
 
@@ -1867,6 +1855,7 @@ RubyConfigMissing(int argc,
 
 /* RubyConfigAdded {{{ */
 /*
+ * :nodoc:
  * Updated methods list when singleton methods are added
  */
 
@@ -1882,13 +1871,95 @@ RubyConfigAdded(VALUE self,
   return Qnil;
 } /* }}} */
 
+/* RubyConfigLoadConfig {{{ */
+/*
+ * call-seq: load_config(file) -> true or false
+ *
+ * Load config file
+ *
+ *  load_config "gravities.rb"
+ *  => true
+ */
+
+static VALUE
+RubyConfigLoadConfig(VALUE self,
+  VALUE file)
+{
+  int state = 0;
+  char buf[100] = { 0 };
+  VALUE rargs[2] = { Qnil };
+
+  /* Check if file exists otherwise try to find it */
+  if(-1 == access(RSTRING_PTR(file), R_OK))
+    {
+      int len = 0;
+      char *home = NULL, *dirs = NULL, *tok = NULL,
+        tokens[200] = { 0 }, *tokensp = tokens;
+
+      /* Combine XDG paths */
+      if((home = getenv("XDG_CONFIG_HOME")))
+        len += snprintf(tokens, sizeof(tokens), "%s", home);
+      else len += snprintf(tokens, sizeof(tokens), "%s/.config",
+        getenv("HOME"));
+
+      if((dirs = getenv("XDG_CONFIG_DIRS")))
+        len += snprintf(tokens + len, sizeof(tokens), ":%s", dirs);
+      else len += snprintf(tokens + len, sizeof(tokens), ":%s/%s",
+        "/etc/xdg", PKG_NAME);
+
+      if((home = getenv("XDG_DATA_HOME")))
+        {
+          snprintf(buf, sizeof(buf), "%s:%s/%s/sublets",
+            tokens, home, PKG_NAME);
+        }
+      else snprintf(buf, sizeof(buf), "%s:%s/.local/share/%s/sublets",
+        tokens, getenv("HOME"), PKG_NAME);
+
+      /* Search file in XDG paths */
+      while((tok = strsep(&tokensp, ":")))
+        {
+          /* Check if config file exists in tok or tok/subtle */
+          snprintf(buf, sizeof(buf), "%s/%s", tok, RSTRING_PTR(file));
+
+          if(-1 != access(buf, R_OK)) break;
+          else
+            {
+              snprintf(buf, sizeof(buf), "%s/%s/%s",
+                tok, PKG_NAME, RSTRING_PTR(file));
+
+              if(-1 != access(buf, R_OK)) break;
+            }
+        }
+    }
+  else snprintf(buf, sizeof(buf), "%s", RSTRING_PTR(file));
+
+  printf("Reading file `%s'\n", buf);
+
+  /* Carefully load and eval file */
+  rargs[0] = rb_str_new2(buf);
+  rargs[1] = self;
+
+  rb_protect(RubyWrapEvalFile, (VALUE)&rargs, &state);
+  if(state)
+    {
+      subSubtleLogWarn("Cannot load file `%s'\n", buf);
+      RubyBacktrace();
+
+      return Qfalse;
+    }
+
+  return Qtrue;
+} /* }}} */
+
 /* RubyConfigSet {{{ */
 /*
  * call-seq: set(option, value) -> nil
  *
- * Set options
+ * Set various WM options 
  *
- *  set :urgent, true
+ * http://subforge.org/projects/subtle/wiki/Config#Settings
+ *
+ *  set :urgent_dialogs, true
  */
 
 static VALUE
@@ -1995,12 +2066,74 @@ RubyConfigSet(VALUE self,
   return Qnil;
 } /* }}} */
 
+/* RubyConfigStyle {{{ */
+/*
+ * call-seq: style(name, blk)   -> nil
+ *
+ * Set propeties of named styles
+ *
+ *  style :title do
+ *    foreground "#fecf35"
+ *  end
+ */
+
+static VALUE
+RubyConfigStyle(VALUE self,
+  VALUE name)
+{
+  rb_need_block();
+
+  /* Check value type */
+  if(T_SYMBOL == rb_type(name))
+    {
+      SubStyle *style = NULL;
+      VALUE klass = Qnil, options = Qnil, styles = Qnil;
+
+      /* Select style struct */
+      if(CHAR2SYM("all")               == name) style = &subtle->styles.all;
+      else if(CHAR2SYM("views")        == name) style = &subtle->styles.views;
+      else if(CHAR2SYM("title")        == name) style = &subtle->styles.title;
+      else if(CHAR2SYM("sublets")      == name) style = &subtle->styles.sublets;
+      else if(CHAR2SYM("separator")    == name) style = &subtle->styles.separator;
+      else if(CHAR2SYM("clients")      == name) style = &subtle->styles.clients;
+      else if(CHAR2SYM("panel_top")    == name) style = &subtle->styles.panel_top;
+      else if(CHAR2SYM("panel_bottom") == name) style = &subtle->styles.panel_bot;
+      else if(CHAR2SYM("tray")         == name) style = &subtle->styles.tray;
+      else
+        {
+          subSubtleLogWarn("Unexpected style name `:%s'\n", SYM2CHAR(name));
+
+          return Qnil;
+        }
+
+      if(subtle->flags & SUB_SUBTLE_CHECK) return Qnil; ///< Skip on check
+
+      /* Collect options */
+      klass   = rb_const_get(mod, rb_intern("Options"));
+      options = rb_funcall(klass, rb_intern("new"), 1, self);
+      rb_obj_instance_eval(0, 0, options);
+
+      /* Eval style before nested styles */
+      RubyEvalStyle(name, style, rb_iv_get(options, "@params"));
+
+      /* Eval styles */
+      if(T_HASH == rb_type((styles = rb_iv_get(options, "@styles"))))
+        rb_hash_foreach(styles, RubyForeachStyle, (VALUE)style);
+    }
+  else rb_raise(rb_eArgError, "Unexpected value type for style `%s'",
+    rb_obj_classname(name));
+
+  return Qnil;
+} /* }}} */
+
 /* RubyConfigGravity {{{ */
 /*
  * call-seq: gravity(name, value, tile) -> nil
  *
- * Create gravity and optionally enable tiling, either
- * horizonally (:horz) or vertically. (:vert)
+ * Create a new gravity and optionally enable tiling, either
+ * horizonally (:horz) or vertically. (:vert) inside of the grid
+ *
+ * http://subforge.org/projects/subtle/wiki/Gravity
  *
  *  gravity :top_left, [0, 0, 50, 50]
  *
@@ -2052,9 +2185,21 @@ RubyConfigGravity(int argc,
  * call-seq: grab(chain, value) -> nil
  *           grab(chain, &blk)  -> nil
  *
- * Create grabs
+ * Create a new grab either to start a program, with a predefined action or
+ * with a code block or start a program
  *
- *  grab "A-F1", :ViewJump1
+ *  grab "W-Return", "urxvt"
+ *
+ *  grab "W-S-1", :ViewJump1
+ *
+ *  grab "A-F2" do |c|
+ *    puts c.name
+ *  end
+ *
+ *  grab "S-F3" do
+ *    puts Subtlext::VERSION
+ *  end
+ *
  */
 
 static VALUE
@@ -2078,12 +2223,16 @@ RubyConfigGrab(int argc,
  * call-seq: tag(name, regex) -> nil
  *           tag(name, blk)   -> nil
  *
- * Add a new tag
+ * Create a new tag either with a regexp or with a block
+ * to set additional properties
  *
- *  tag "foobar", "regex"
+ * http://subforge.org/projects/subtle/wiki/Tagging
  *
- *  tag "foobar" do
- *    regex = "foobar"
+ *  tag "terms", "xterm|[u]?rxvt"
+ *
+ *  tag "terms" do
+ *    match "xterm|[u]?rxvt"
+ *    gravity :center
  *  end
  */
 
@@ -2238,7 +2387,9 @@ RubyConfigTag(int argc,
 /*
  * call-seq: view(name, regex) -> nil
  *
- * Add a new view
+ * Create a new view with a regex to match tags
+ *
+ * http://subforge.org/projects/subtle/wiki/Views
  *
  *  view "foobar", "regex"
  */
@@ -2326,142 +2477,13 @@ RubyConfigView(int argc,
   return Qnil;
 } /* }}} */
 
-/* RubyConfigOn {{{ */
-/*
- * call-seq: on(event, &block) -> nil
- *
- * Event block for hooks
- *
- *  on :event do |s|
- *    puts s.name
- *  end
- */
-
-static VALUE
-RubyConfigOn(int argc,
-  VALUE *argv,
-  VALUE self)
-{
-  VALUE event = Qnil, value = Qnil;
-
-  rb_scan_args(argc, argv, "11", &event, &value);
-
-  /* Check value type */
-  if(T_SYMBOL == rb_type(event))
-    {
-      if(subtle->flags & SUB_SUBTLE_CHECK) return Qnil; ///< Skip on check
-
-      if(rb_block_given_p()) value = rb_block_proc(); ///< Get proc
-
-      RubyEvalHook(event, value);
-    }
-  else rb_raise(rb_eArgError, "Unknown value type for on");
-
-  return Qnil;
-} /* }}} */
-
-/* RubyConfigSublet {{{ */
-/*
- * call-seq: sublet(name, blk)   -> nil
- *
- * Configure a sublet
- *
- *  sublet :jdownloader do
- *    interval 20
- *  end
- */
-
-static VALUE
-RubyConfigSublet(VALUE self,
-  VALUE sublet)
-{
-  VALUE klass = Qnil, options = Qnil;
-
-  rb_need_block();
-
-  /* Check value type */
-  if(T_SYMBOL == rb_type(sublet))
-    {
-      /* Collect options */
-      klass   = rb_const_get(mod, rb_intern("Options"));
-      options = rb_funcall(klass, rb_intern("new"), 1, self);
-      rb_obj_instance_eval(0, 0, options);
-
-      /* Clone to get rid of object instance and store it */
-      rb_hash_aset(config_sublets, sublet,
-        rb_obj_clone(rb_iv_get(options, "@params")));
-    }
-  else rb_raise(rb_eArgError, "Unknown value type for sublet");
-
-  return Qnil;
-} /* }}} */
-
-/* RubyConfigStyle {{{ */
-/*
- * call-seq: style(name, blk)   -> nil
- *
- * Add style values
- *
- *  style :title do
- *    foreground "#fecf35"
- *    background "#202020"
- *  end
- */
-
-static VALUE
-RubyConfigStyle(VALUE self,
-  VALUE name)
-{
-  rb_need_block();
-
-  /* Check value type */
-  if(T_SYMBOL == rb_type(name))
-    {
-      SubStyle *style = NULL;
-      VALUE klass = Qnil, options = Qnil, styles = Qnil;
-
-      /* Select style struct */
-      if(CHAR2SYM("all")               == name) style = &subtle->styles.all;
-      else if(CHAR2SYM("views")        == name) style = &subtle->styles.views;
-      else if(CHAR2SYM("title")        == name) style = &subtle->styles.title;
-      else if(CHAR2SYM("sublets")      == name) style = &subtle->styles.sublets;
-      else if(CHAR2SYM("separator")    == name) style = &subtle->styles.separator;
-      else if(CHAR2SYM("clients")      == name) style = &subtle->styles.clients;
-      else if(CHAR2SYM("panel_top")    == name) style = &subtle->styles.panel_top;
-      else if(CHAR2SYM("panel_bottom") == name) style = &subtle->styles.panel_bot;
-      else if(CHAR2SYM("tray")         == name) style = &subtle->styles.tray;
-      else
-        {
-          subSubtleLogWarn("Unexpected style name `:%s'\n", SYM2CHAR(name));
-
-          return Qnil;
-        }
-
-      if(subtle->flags & SUB_SUBTLE_CHECK) return Qnil; ///< Skip on check
-
-      /* Collect options */
-      klass   = rb_const_get(mod, rb_intern("Options"));
-      options = rb_funcall(klass, rb_intern("new"), 1, self);
-      rb_obj_instance_eval(0, 0, options);
-
-      /* Eval style before nested styles */
-      RubyEvalStyle(name, style, rb_iv_get(options, "@params"));
-
-      /* Eval styles */
-      if(T_HASH == rb_type((styles = rb_iv_get(options, "@styles"))))
-        rb_hash_foreach(styles, RubyForeachStyle, (VALUE)style);
-    }
-  else rb_raise(rb_eArgError, "Unexpected value type for style `%s'",
-    rb_obj_classname(name));
-
-  return Qnil;
-} /* }}} */
-
 /* RubyConfigScreen {{{ */
 /*
  * call-seq: screen(screenid, blk) -> nil
  *
- * Add style values
+ * Split a physical screen in virtual ones
+ *
+ * http://subforge.org/projects/subtle/wiki/Config/#Screens
  *
  *  screen 1 do
  *    virtual [  0, 0, 50, 100 ]
@@ -2543,90 +2565,86 @@ RubyConfigScreen(VALUE self,
   return Qnil;
 } /* }}} */
 
-/* RubyConfigLoadConfig {{{ */
+/* RubyConfigSublet {{{ */
 /*
- * call-seq: load_config(file) -> true or false
+ * call-seq: sublet(name, blk)   -> nil
  *
- * Load config file
+ * Set properties of sublets
  *
- *  load_config "gravities.rb"
- *  => true
+ * http://subforge.org/projects/subtle/wiki/Sublets
+ *
+ *  sublet :clock do
+ *    interval 20
+ *    foreground    "#eeeeee"
+ *    background    "#000000"
+ *    format_string "%H:%M:%S"
+ *  end
  */
 
 static VALUE
-RubyConfigLoadConfig(VALUE self,
-  VALUE file)
+RubyConfigSublet(VALUE self,
+  VALUE sublet)
 {
-  int state = 0;
-  char buf[100] = { 0 };
-  VALUE rargs[2] = { Qnil };
+  VALUE klass = Qnil, options = Qnil;
 
-  /* Check if file exists otherwise try to find it */
-  if(-1 == access(RSTRING_PTR(file), R_OK))
+  rb_need_block();
+
+  /* Check value type */
+  if(T_SYMBOL == rb_type(sublet))
     {
-      int len = 0;
-      char *home = NULL, *dirs = NULL, *tok = NULL,
-        tokens[200] = { 0 }, *tokensp = tokens;
+      /* Collect options */
+      klass   = rb_const_get(mod, rb_intern("Options"));
+      options = rb_funcall(klass, rb_intern("new"), 1, self);
+      rb_obj_instance_eval(0, 0, options);
 
-      /* Combine XDG paths */
-      if((home = getenv("XDG_CONFIG_HOME")))
-        len += snprintf(tokens, sizeof(tokens), "%s", home);
-      else len += snprintf(tokens, sizeof(tokens), "%s/.config",
-        getenv("HOME"));
-
-      if((dirs = getenv("XDG_CONFIG_DIRS")))
-        len += snprintf(tokens + len, sizeof(tokens), ":%s", dirs);
-      else len += snprintf(tokens + len, sizeof(tokens), ":%s/%s",
-        "/etc/xdg", PKG_NAME);
-
-      if((home = getenv("XDG_DATA_HOME")))
-        {
-          snprintf(buf, sizeof(buf), "%s:%s/%s/sublets",
-            tokens, home, PKG_NAME);
-        }
-      else snprintf(buf, sizeof(buf), "%s:%s/.local/share/%s/sublets",
-        tokens, getenv("HOME"), PKG_NAME);
-
-      /* Search file in XDG paths */
-      while((tok = strsep(&tokensp, ":")))
-        {
-          /* Check if config file exists in tok or tok/subtle */
-          snprintf(buf, sizeof(buf), "%s/%s", tok, RSTRING_PTR(file));
-
-          if(-1 != access(buf, R_OK)) break;
-          else
-            {
-              snprintf(buf, sizeof(buf), "%s/%s/%s",
-                tok, PKG_NAME, RSTRING_PTR(file));
-
-              if(-1 != access(buf, R_OK)) break;
-            }
-        }
+      /* Clone to get rid of object instance and store it */
+      rb_hash_aset(config_sublets, sublet,
+        rb_obj_clone(rb_iv_get(options, "@params")));
     }
-  else snprintf(buf, sizeof(buf), "%s", RSTRING_PTR(file));
+  else rb_raise(rb_eArgError, "Unknown value type for sublet");
 
-  printf("Reading file `%s'\n", buf);
+  return Qnil;
+} /* }}} */
 
-  /* Carefully load and eval file */
-  rargs[0] = rb_str_new2(buf);
-  rargs[1] = self;
+/* RubyConfigOn {{{ */
+/*
+ * call-seq: on(event, &block) -> nil
+ *
+ * Create a new event handler for a hook
+ *
+ *  on :client_focus do |s|
+ *    puts s.name
+ *  end
+ */
 
-  rb_protect(RubyWrapEvalFile, (VALUE)&rargs, &state);
-  if(state)
+static VALUE
+RubyConfigOn(int argc,
+  VALUE *argv,
+  VALUE self)
+{
+  VALUE event = Qnil, value = Qnil;
+
+  rb_scan_args(argc, argv, "11", &event, &value);
+
+  /* Check value type */
+  if(T_SYMBOL == rb_type(event))
     {
-      subSubtleLogWarn("Cannot load file `%s'\n", buf);
-      RubyBacktrace();
+      if(subtle->flags & SUB_SUBTLE_CHECK) return Qnil; ///< Skip on check
 
-      return Qfalse;
+      if(rb_block_given_p()) value = rb_block_proc(); ///< Get proc
+
+      RubyEvalHook(event, value);
     }
+  else rb_raise(rb_eArgError, "Unknown value type for on");
 
-  return Qtrue;
+  return Qnil;
 } /* }}} */
 
 /* Sublet */
 
 /* RubySubletDispatcher {{{ */
 /*
+ * :nodoc:
  * Dispatcher for Sublet instance variables - internal use only
  */
 
