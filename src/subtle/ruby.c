@@ -1032,19 +1032,22 @@ RubyEvalPanelConfig(int flag,
   int i;
 
   /* Iterate over config array */
-  for(i = 0; i < (int)RARRAY_LEN(config); i += 2)
+  if(!NIL_P(config))
     {
-      int idx      = FIX2INT(rb_ary_entry(config, i));
-      VALUE panels = rb_ary_entry(config, i + 1);
-
-      /* Sanity check */
-      SubScreen *s = SCREEN(subArrayGet(subtle->screens, (idx - 1)));
-
-      if(s)
+      for(i = 0; i < (int)RARRAY_LEN(config); i += 2)
         {
-          if(!s->panels) s->panels = subArrayNew();
+          int idx      = FIX2INT(rb_ary_entry(config, i));
+          VALUE panels = rb_ary_entry(config, i + 1);
 
-          RubyEvalPanel(panels, flag, s);
+          /* Sanity check */
+          SubScreen *s = SCREEN(subArrayGet(subtle->screens, (idx - 1)));
+
+          if(s)
+            {
+              if(!s->panels) s->panels = subArrayNew();
+
+              RubyEvalPanel(panels, flag, s);
+            }
         }
     }
 } /* }}} */
