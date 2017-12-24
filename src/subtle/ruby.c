@@ -274,7 +274,7 @@ RubySymbolToFlag(VALUE sym,
   else if(CHAR2SYM("role")       == sym) (*flags) |= SUB_TAG_MATCH_ROLE;
   else if(CHAR2SYM("type")       == sym) (*flags) |= SUB_TAG_MATCH_TYPE;
 
-  /* Types */
+  /* Window types */
   else if(CHAR2SYM("normal")     == sym) (*flags) |= SUB_CLIENT_TYPE_NORMAL;
   else if(CHAR2SYM("desktop")    == sym) (*flags) |= SUB_CLIENT_TYPE_DESKTOP;
   else if(CHAR2SYM("dock")       == sym) (*flags) |= SUB_CLIENT_TYPE_DOCK;
@@ -282,7 +282,7 @@ RubySymbolToFlag(VALUE sym,
   else if(CHAR2SYM("splash")     == sym) (*flags) |= SUB_CLIENT_TYPE_SPLASH;
   else if(CHAR2SYM("dialog")     == sym) (*flags) |= SUB_CLIENT_TYPE_DIALOG;
 
-  /* Modes */
+  /* Tag modes */
   else if(CHAR2SYM("borderless") == sym) (*flags) |= SUB_CLIENT_MODE_BORDERLESS;
   else if(CHAR2SYM("centered")   == sym) (*flags) |= SUB_CLIENT_MODE_CENTER;
   else if(CHAR2SYM("fixed")      == sym) (*flags) |= SUB_CLIENT_MODE_FIXED;
@@ -292,6 +292,10 @@ RubySymbolToFlag(VALUE sym,
   else if(CHAR2SYM("sticky")     == sym) (*flags) |= SUB_CLIENT_MODE_STICK;
   else if(CHAR2SYM("urgent")     == sym) (*flags) |= SUB_CLIENT_MODE_URGENT;
   else if(CHAR2SYM("zaphod")     == sym) (*flags) |= SUB_CLIENT_MODE_ZAPHOD;
+
+  /* View modes */
+  else if(CHAR2SYM("dynamic")     == sym) (*flags) |= SUB_VIEW_DYNAMIC;
+  else if(CHAR2SYM("icons_only")   == sym) (*flags) |= SUB_VIEW_ICON_ONLY;
 } /* }}} */
 
 /* RubyArrayToArray {{{ */
@@ -2280,7 +2284,7 @@ RubyConfigTag(int argc,
           RubyArrayToGeometry(value, &geom);
         }
 
-      /* Set geometry */
+      /* Set position */
       if(T_ARRAY == rb_type(value = rb_hash_lookup(params,
           CHAR2SYM("position"))))
         {
@@ -2418,15 +2422,21 @@ RubyConfigView(int argc,
       /* Check match */
       match = rb_hash_lookup(params, CHAR2SYM("match")); ///< Lazy eval
 
-      /* Check dynamic */
-      if(Qtrue == (value = rb_hash_lookup(params,
-          CHAR2SYM("dynamic"))))
-        flags |= SUB_VIEW_DYNAMIC;
+      /* Set modes */
+      if(T_SYMBOL == rb_type(value = rb_hash_lookup(params,
+          CHAR2SYM("set"))))
+        {
+          RubySymbolToFlag(value, &flags);
+        }
+      else if(T_ARRAY == rb_type(value))
+        {
+          int i;
+          VALUE entry = Qnil;
 
-      /* Check icon only */
-      if(Qtrue == (value = rb_hash_lookup(params,
-          CHAR2SYM("icon_only"))))
-        flags |= SUB_VIEW_ICON_ONLY;
+          /* Translate modes */
+          for(i = 0; Qnil != (entry = rb_ary_entry(value, i)); i++)
+            RubySymbolToFlag(entry, &flags);
+        }
 
       /* Check icon */
       icon = RubyValueToIcon(rb_hash_lookup(params, CHAR2SYM("icon")));
