@@ -66,7 +66,7 @@ set :skip_urgent_warp, false
 #
 # The styles also define the styling and appearance of the two possible
 # panels per screen in subtle. Each panel can be configured with different
-# panel items and sublets screen wise. The default config uses top panel
+# panel items and sublets screen wise. The default config uses a top panel
 # on the first screen only, it's up to the user to enable the bottom panel or
 # disable either one # or both.
 #
@@ -92,9 +92,9 @@ set :skip_urgent_warp, false
 
 # Style for all style elements
 style :all do
+  foreground  "#757575"
   background  "#202020"
   icon        "#757575"
-  border      "#303030", 0
   padding     0, 3
   font        "-*-*-*-*-*-*-14-*-*-*-*-*-*-*"
   #font        "xft:sans-8"
@@ -102,8 +102,6 @@ end
 
 # Style for the all views
 style :views do
-  foreground  "#757575"
-
   # Style for the active views
   style :focus do
     foreground  "#fecf35"
@@ -122,12 +120,10 @@ end
 
 # Style for sublets
 style :sublets do
-  foreground  "#757575"
 end
 
 # Style for separator
 style :separator do
-  foreground  "#757575"
   separator   "|"
 end
 
@@ -144,16 +140,18 @@ style :clients do
   width     50
 end
 
+# Style for tray
+style :tray do
+end
+
 # Style for top panels
 style :panel_top do
-  background  "#202020"
   screen 1, [ :views, :title, :spacer, :keychain, :spacer, :tray, :sublets ]
   #screen 2, [ :views ]
 end
 
 # Style for bottom panels
 style :panel_bottom do
-  background  "#202020"
   screen 1, [ ]
   #screen 2, [ ]
 end
@@ -608,7 +606,7 @@ end
 
 # Simple tags
 tag "terms",   "xterm|[u]?rxvt"
-tag "browser", "uzbl|opera|firefox|navigator"
+tag "browser", "opera|firefox|(google\-)?chrom[e|ium]"
 
 # Placement
 tag "editor" do
