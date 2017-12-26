@@ -1482,13 +1482,17 @@ RubyWrapLoadPanels(VALUE data)
             }
         }
 
+
       /* Unloaded non-visible sublets */
       for(i = 0; i < subtle->sublets->ndata; i++)
         {
           SubPanel *p = PANEL(subtle->sublets->data[i]);
 
           if(p->flags & SUB_PANEL_SUBLET && !p->screen)
-            subRubyUnloadSublet(p);
+            {
+              subRubyUnloadSublet(p);
+              i--; ///< Prevent skipping of entries
+            }
         }
 
       /* Finally sort sublets */
