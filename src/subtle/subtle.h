@@ -952,7 +952,6 @@ void subTextKill(SubText *t);                                     ///< Delete te
 /* tray.c {{{ */
 SubTray *subTrayNew(Window win);                                  ///< Create tray
 void subTrayConfigure(SubTray *t);                                ///< Configure tray
-void subTrayUpdate(void);                                         ///< Update tray bar
 void subTraySetState(SubTray *t);                                 ///< Set state
 void subTraySelect(void);                                         ///< Set selection
 void subTrayDeselect(void);                                       ///< Get selection
