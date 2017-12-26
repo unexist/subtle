@@ -513,7 +513,18 @@ subScreenUpdate(void)
 
           /* Set panel position */
           if(p->flags & SUB_PANEL_TRAY)
-            XMoveWindow(subtle->dpy, subtle->windows.tray, x[offset], 0);
+            {
+              if(0 < subtle->trays->ndata)
+                {
+                  XMapRaised(subtle->dpy, subtle->windows.tray);
+                  XMoveResizeWindow(subtle->dpy, subtle->windows.tray, 
+                    x[offset] + STYLE_LEFT(subtle->styles.tray),
+                    STYLE_TOP(subtle->styles.tray),
+                    p->width - STYLE_WIDTH(subtle->styles.tray),
+                    subtle->ph - STYLE_HEIGHT(subtle->styles.tray));
+                }
+            }
+
           p->x = x[offset];
 
           /* Add separator after panel item */
