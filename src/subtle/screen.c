@@ -516,12 +516,18 @@ subScreenUpdate(void)
             {
               if(0 < subtle->trays->ndata)
                 {
+                  int tray_width  = p->width - STYLE_WIDTH(subtle->styles.tray);
+                  int tray_height = subtle->ph - STYLE_HEIGHT(subtle->styles.tray);
+
                   XMapRaised(subtle->dpy, subtle->windows.tray);
+
+                  XSetForeground(subtle->dpy, subtle->gcs.draw, subtle->styles.tray.bg);
+                  XFillRectangle(subtle->dpy, subtle->windows.tray, subtle->gcs.draw,
+                      0,0, tray_width, tray_height);
+
                   XMoveResizeWindow(subtle->dpy, subtle->windows.tray, 
                     x[offset] + STYLE_LEFT(subtle->styles.tray),
-                    STYLE_TOP(subtle->styles.tray),
-                    p->width - STYLE_WIDTH(subtle->styles.tray),
-                    subtle->ph - STYLE_HEIGHT(subtle->styles.tray));
+                    STYLE_TOP(subtle->styles.tray), tray_width, tray_height);
                 }
             }
 
