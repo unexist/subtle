@@ -3585,9 +3585,9 @@ subRubyLoadConfig(void)
   subStyleReset(&subtle->styles.sublets,   -1);
   subStyleReset(&subtle->styles.separator, -1);
   subStyleReset(&subtle->styles.clients,    0);
-  subStyleReset(&subtle->styles.panel_top,  0);
-  subStyleReset(&subtle->styles.panel_bot,  0);
-  subStyleReset(&subtle->styles.tray,       0);
+  subStyleReset(&subtle->styles.panel_top, -1);
+  subStyleReset(&subtle->styles.panel_bot, -1);
+  subStyleReset(&subtle->styles.tray,      -1);
 
   /* Reset values */
   subtle->gravity           = -1;

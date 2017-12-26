@@ -293,6 +293,9 @@ subStyleUpdate(void)
   StyleInherit(&subtle->styles.title,     &subtle->styles.all);
   StyleInherit(&subtle->styles.sublets,   &subtle->styles.all);
   StyleInherit(&subtle->styles.separator, &subtle->styles.all);
+  StyleInherit(&subtle->styles.panel_top, &subtle->styles.all);
+  StyleInherit(&subtle->styles.panel_bot, &subtle->styles.all);
+  StyleInherit(&subtle->styles.tray,      &subtle->styles.all);
 
   /* Check font */
   StyleFont(&(subtle->styles.title),     "title");
@@ -300,8 +303,8 @@ subStyleUpdate(void)
   StyleFont(&(subtle->styles.sublets),   "sublets");
   StyleFont(subtle->styles.occupied,     "occupied");
   StyleFont(subtle->styles.focus,        "focus");
-  StyleFont(subtle->styles.view_sep,      "view separator");
-  StyleFont(subtle->styles.sublet_sep,    "sublet separator");
+  StyleFont(subtle->styles.view_sep,     "view separator");
+  StyleFont(subtle->styles.sublet_sep,   "sublet separator");
 
   subSubtleLogDebugSubtle("Update\n");
 } /* }}} */
