@@ -12,13 +12,15 @@
 
 #include "subtle.h"
 
-/* PanelRect {{{ */
+/* PanelDrawRect {{{ */
 static void
-PanelRect(Drawable drawable,
+PanelDrawRect(Drawable drawable,
   int x,
   int width,
   SubStyle *s)
 {
+  if(0 >= width) return;
+
   int mw = s->margin.left + s->margin.right;
   int mh = s->margin.top + s->margin.bottom;
 
@@ -27,34 +29,37 @@ PanelRect(Drawable drawable,
   XFillRectangle(subtle->dpy, drawable, subtle->gcs.draw,
     x + s->margin.left, s->margin.top, width - mw, subtle->ph - mh);
 
-  /* Borders */
+  /* Borders: Top */
   XSetForeground(subtle->dpy, subtle->gcs.draw, s->top);
   XFillRectangle(subtle->dpy, drawable, subtle->gcs.draw,
     x + s->margin.left, s->margin.top, width - mw, s->border.top);
 
+  /* Borders: Right */
   XSetForeground(subtle->dpy, subtle->gcs.draw, s->right);
   XFillRectangle(subtle->dpy, drawable, subtle->gcs.draw,
     x + width - s->border.right - s->margin.right, s->margin.top,
     s->border.right, subtle->ph - mh);
 
+  /* Borders: Bottom */
   XSetForeground(subtle->dpy, subtle->gcs.draw, s->bottom);
   XFillRectangle(subtle->dpy, drawable, subtle->gcs.draw,
     x + s->margin.left, subtle->ph - s->border.bottom - s->margin.bottom,
     width - mw, s->border.bottom);
 
+  /* Borders: Left */
   XSetForeground(subtle->dpy, subtle->gcs.draw, s->left);
   XFillRectangle(subtle->dpy, drawable, subtle->gcs.draw,
     x + s->margin.left, s->margin.top, s->border.left, subtle->ph - mh);
 } /* }}} */
 
-/* PanelSeparator {{{ */
+/* PanelDrawSeparator {{{ */
 static void
-PanelSeparator(int x,
+PanelDrawSeparator(int x,
   SubStyle *s,
   Drawable drawable)
 {
   /* Set window background and border*/
-  PanelRect(drawable, x, s->separator->width, s);
+  PanelDrawRect(drawable, x, s->separator->width, s);
 
   subSharedDrawString(subtle->dpy, subtle->gcs.draw,
     s->font, drawable, x + STYLE_LEFT((*s)),
@@ -193,9 +198,34 @@ subPanelUpdate(SubPanel *p)
   assert(p);
 
   /* Handle panel item type */
-  switch(p->flags & (SUB_PANEL_ICON|SUB_PANEL_KEYCHAIN|
+  switch(p->flags & (SUB_PANEL_TRAY|SUB_PANEL_ICON|SUB_PANEL_KEYCHAIN|
       SUB_PANEL_SUBLET|SUB_PANEL_TITLE|SUB_PANEL_VIEWS))
     {
+      case SUB_PANEL_TRAY: /* {{{ */
+        p->width = 0; ///< Reset width
+
+        if(0 < subtle->trays->ndata)
+          {
+            int i;
+
+            /* Resize every tray */
+            for(i = 0; i < subtle->trays->ndata; i++)
+              {
+                SubTray *t = TRAY(subtle->trays->data[i]);
+
+                if(t->flags & SUB_TRAY_DEAD) continue;
+
+                XMapWindow(subtle->dpy, t->win);
+                XMoveResizeWindow(subtle->dpy, t->win, p->width, 0,
+                  t->width, subtle->ph - STYLE_HEIGHT(subtle->styles.tray));
+
+                p->width += t->width;
+              }
+
+            p->width += STYLE_WIDTH(subtle->styles.tray); ///< Add style width
+          }
+        else XUnmapWindow(subtle->dpy, subtle->windows.tray);
+        break; /* }}} */
       case SUB_PANEL_ICON: /* {{{ */
         p->width = p->icon->width + subtle->styles.separator.padding.left +
           subtle->styles.separator.padding.right + 4;
@@ -319,14 +349,17 @@ subPanelRender(SubPanel *p,
   /* Draw separator before panel */
   if(p->flags & SUB_PANEL_SEPARATOR1 && subtle->styles.separator.separator)
     {
-      PanelSeparator(p->x - subtle->styles.separator.separator->width,
+      PanelDrawSeparator(p->x - subtle->styles.separator.separator->width,
         &subtle->styles.separator, drawable);
     }
 
   /* Handle panel item type */
-  switch(p->flags & (SUB_PANEL_ICON|SUB_PANEL_KEYCHAIN|
+  switch(p->flags & (SUB_PANEL_TRAY|SUB_PANEL_ICON|SUB_PANEL_KEYCHAIN|
       SUB_PANEL_SUBLET|SUB_PANEL_TITLE|SUB_PANEL_VIEWS))
     {
+      case SUB_PANEL_TRAY: /* {{{ */
+        PanelDrawRect(drawable, p->x, p->width, &subtle->styles.tray);
+        break; /* }}} */
       case SUB_PANEL_ICON: /* {{{ */
           {
             int y = 0, icony = 0;
@@ -359,7 +392,7 @@ subPanelRender(SubPanel *p,
             SubStyle *s = PanelSubletStyle(p);
 
             /* Set window background and border*/
-            PanelRect(drawable, p->x, p->width, s);
+            PanelDrawRect(drawable, p->x, p->width, s);
 
             /* Render text parts */
             subTextRender(p->sublet->text, s->font, subtle->gcs.draw,
@@ -383,7 +416,7 @@ subPanelRender(SubPanel *p,
                 PanelClientModes(c, buf, &width);
 
                 /* Set window background and border*/
-                PanelRect(drawable, p->x, p->width, &subtle->styles.title);
+                PanelDrawRect(drawable, p->x, p->width, &subtle->styles.title);
 
                 /* Draw modes and title */
                 len = strlen(c->name);
@@ -426,7 +459,7 @@ subPanelRender(SubPanel *p,
                 PanelViewStyle(v, i, (p->screen->viewid == i), &s);
 
                 /* Set window background and border*/
-                PanelRect(drawable, vx, v->width, &s);
+                PanelDrawRect(drawable, vx, v->width, &s);
 
                 x += STYLE_LEFT((s));
 
@@ -459,7 +492,7 @@ subPanelRender(SubPanel *p,
                 /* Draw view separator if any */
                 if(subtle->styles.view_sep && i < subtle->views->ndata - 1)
                   {
-                    PanelSeparator(vx, subtle->styles.view_sep, drawable);
+                    PanelDrawSeparator(vx, subtle->styles.view_sep, drawable);
 
                     vx += subtle->styles.view_sep->separator->width;
                   }
@@ -474,7 +507,7 @@ subPanelRender(SubPanel *p,
       SubStyle *s = p->flags & SUB_PANEL_SUBLET && subtle->styles.sublet_sep ?
         subtle->styles.sublet_sep : &subtle->styles.separator;
 
-      PanelSeparator(p->x + p->width, s, drawable);
+      PanelDrawSeparator(p->x + p->width, s, drawable);
     }
 
   subSubtleLogDebugSubtle("Render\n");

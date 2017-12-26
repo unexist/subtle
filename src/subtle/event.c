@@ -365,7 +365,6 @@ EventDestroy(XDestroyWindowEvent *ev)
       /* Kill tray */
       subArrayRemove(subtle->trays, (void *)t);
       subTrayKill(t);
-      subTrayUpdate();
       subTrayPublish();
 
       subScreenUpdate();
@@ -808,7 +807,6 @@ EventMap(XMapEvent *ev)
     {
       t->flags &= ~SUB_TRAY_DEAD;
 
-      subTrayUpdate();
       subScreenUpdate();
       subScreenRender();
     }
@@ -1357,7 +1355,6 @@ EventMessage(XClientMessageEvent *ev)
                         {
                           subArrayPush(subtle->trays, (void *)r);
                           subTrayPublish();
-                          subTrayUpdate();
                           subScreenUpdate();
                           subScreenRender();
                         }
@@ -1524,7 +1521,6 @@ EventProperty(XPropertyEvent *ev)
         else if((t = TRAY(subSubtleFind(ev->window, TRAYID))))
           {
             subTrayConfigure(t);
-            subTrayUpdate();
             subScreenUpdate();
             subScreenRender();
           }
@@ -1563,7 +1559,6 @@ EventProperty(XPropertyEvent *ev)
         if((t = TRAY(subSubtleFind(ev->window, TRAYID))))
           {
             subTraySetState(t);
-            subTrayUpdate();
             subScreenUpdate();
             subScreenRender();
           }
@@ -1655,7 +1650,6 @@ EventUnmap(XUnmapEvent *ev)
       /*  Kill tray */
       subArrayRemove(subtle->trays, (void *)t);
       subTrayKill(t);
-      subTrayUpdate();
       subTrayPublish();
 
       subScreenUpdate();
