@@ -89,51 +89,16 @@ subTrayConfigure(SubTray *t)
   XGetWMNormalHints(subtle->dpy, t->win, hints, &supplied);
   if(0 < supplied)
     {
+      if(hints->flags & PMinSize) ///< Min size
+        t->width = MINMAX(hints->min_width, subtle->ph, 2 * subtle->ph);
+      if(hints->flags & PBaseSize) ///< Base size
+        t->width = MINMAX(hints->base_width, subtle->ph, 2 * subtle->ph);
       if(hints->flags & (USSize|PSize)) ///< User/program size
         t->width = MINMAX(hints->width, subtle->ph, 2 * subtle->ph);
-      else if(hints->flags & PBaseSize) ///< Base size
-        t->width = MINMAX(hints->base_width, subtle->ph, 2 * subtle->ph);
-      else if(hints->flags & PMinSize) ///< Min size
-        t->width = MINMAX(hints->min_width, subtle->ph, 2 * subtle->ph);
     }
   XFree(hints);
 
   subSubtleLogDebug("Configure: width=%d, supplied=%ld\n", t->width, supplied);
-} /* }}} */
-
- /** subTrayUpdate {{{
-  * @brief Update tray window
-  **/
-
-void
-subTrayUpdate(void)
-{
-  subtle->panels.tray.width = 0; ///< Reset width
-
-  if(0 < subtle->trays->ndata)
-    {
-      int i;
-
-      /* Resize every tray */
-      for(i = 0, subtle->panels.tray.width = 3; i < subtle->trays->ndata; i++)
-        {
-          SubTray *t = TRAY(subtle->trays->data[i]);
-
-          if(t->flags & SUB_TRAY_DEAD) continue;
-
-          XMapWindow(subtle->dpy, t->win);
-          XMoveResizeWindow(subtle->dpy, t->win, subtle->panels.tray.width,
-            0, t->width, subtle->ph);
-          subtle->panels.tray.width += t->width;
-        }
-
-      subtle->panels.tray.width += 3; ///< Add padding
-
-      XMapRaised(subtle->dpy, subtle->windows.tray);
-      XResizeWindow(subtle->dpy, subtle->windows.tray,
-        subtle->panels.tray.width, subtle->ph);
-    }
-  else XUnmapWindow(subtle->dpy, subtle->windows.tray);
 } /* }}} */
 
  /** subTraySetState {{{
@@ -241,7 +206,6 @@ subTrayClose(SubTray *t)
       subArrayRemove(subtle->trays, (void *)t);
       subTrayKill(t);
       subTrayPublish();
-      subTrayUpdate();
 
       subScreenUpdate();
       subScreenRender();
