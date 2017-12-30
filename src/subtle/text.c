@@ -102,7 +102,7 @@ subTextParse(SubText *t,
         }
     }
 
-  /* Mark other items a clean */
+  /* Mark other items as clean */
   for(; i < t->nitems; i++)
     ITEM(t->items[i])->flags |= SUB_TEXT_EMPTY;
 
@@ -160,10 +160,8 @@ subTextRender(SubText *t,
         }
       else if(item->flags & (SUB_TEXT_BITMAP|SUB_TEXT_PIXMAP)) ///< Icons
         {
-          int icony = 0, dx = (0 == i) ? 0 : 3; ///< Add spacing when icon isn't first
-
-          icony = item->height > f->height ?
-            y - f->y - ((item->height - f->height) / 2): y - item->height;
+          int dx = (0 == i) ? 0 : 3; ///< Add spacing when icon isn't first
+          int icony = (subtle->ph - item->height) / 2;
 
           subSharedDrawIcon(subtle->dpy, gc, win, width + dx, icony,
             item->width, item->height, (-1 == item->color) ? icon : item->color,

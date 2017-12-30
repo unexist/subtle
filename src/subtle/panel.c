@@ -12,6 +12,10 @@
 
 #include "subtle.h"
 
+#define STYLE_FONT_Y(S, F) \
+  ((subtle->ph - STYLE_HEIGHT((S))) - F->height) / 2 + \
+  F->y + STYLE_TOP((S)); 
+
 /* PanelDrawRect {{{ */
 static void
 PanelDrawRect(Drawable drawable,
@@ -394,10 +398,11 @@ subPanelRender(SubPanel *p,
             /* Set window background and border*/
             PanelDrawRect(drawable, p->x, p->width, s);
 
+            int y = STYLE_FONT_Y((*s), s->font);
+
             /* Render text parts */
             subTextRender(p->sublet->text, s->font, subtle->gcs.draw,
-              drawable, p->x + STYLE_LEFT((*s)), s->font->y +
-              STYLE_TOP((*s)), s->fg, s->icon, s->bg);
+              drawable, p->x + STYLE_LEFT((*s)), y, s->fg, s->icon, s->bg);
           }
         break; /* }}} */
       case SUB_PANEL_TITLE: /* {{{ */
@@ -421,8 +426,7 @@ subPanelRender(SubPanel *p,
                 /* Draw modes and title */
                 len = strlen(c->name);
                 x   = p->x + STYLE_LEFT(subtle->styles.title);
-                y   = subtle->styles.title.font->y +
-                  STYLE_TOP(subtle->styles.title);
+                y   = STYLE_FONT_Y(subtle->styles.title, subtle->styles.title.font);
 
                 subSharedDrawString(subtle->dpy, subtle->gcs.draw,
                   subtle->styles.title.font, drawable, x, y,
@@ -448,7 +452,7 @@ subPanelRender(SubPanel *p,
             /* View buttons */
             for(i = 0; i < subtle->views->ndata; i++)
               {
-                int x = 0;
+                int x = 0, y = 0;
                 SubView *v = VIEW(subtle->views->data[i]);
 
                 /* Skip dynamic views */
@@ -456,21 +460,19 @@ subPanelRender(SubPanel *p,
                     !(subtle->client_tags & v->tags))
                   continue;
 
+                /* Select style and calculate x and y offsets */
                 PanelViewStyle(v, i, (p->screen->viewid == i), &s);
+
+                x += STYLE_LEFT((s));
+                y  = STYLE_FONT_Y(s, s.font);
 
                 /* Set window background and border*/
                 PanelDrawRect(drawable, vx, v->width, &s);
 
-                x += STYLE_LEFT((s));
-
                 /* Draw view icon and/or text */
                 if(v->flags & SUB_VIEW_ICON)
                   {
-                    int y = 0, icony = 0;
-
-                    y     = s.font->y + STYLE_TOP((s));
-                    icony = v->icon->height > y ? s.margin.top :
-                      y - v->icon->height;
+                    int icony = (subtle->ph - v->icon->height) / 2;
 
                     subSharedDrawIcon(subtle->dpy, subtle->gcs.draw,
                       drawable, vx + x, icony, v->icon->width,
@@ -480,11 +482,12 @@ subPanelRender(SubPanel *p,
 
                 if(!(v->flags & SUB_VIEW_ICON_ONLY))
                   {
+                    /* Add space between icon and text */
                     if(v->flags & SUB_VIEW_ICON) x += v->icon->width + 3;
 
                     subSharedDrawString(subtle->dpy, subtle->gcs.draw,
-                      s.font, drawable, vx + x, s.font->y +
-                      STYLE_TOP((s)), s.fg, s.bg, v->name, strlen(v->name));
+                      s.font, drawable, vx + x, y,s.fg, s.bg, v->name,
+                      strlen(v->name));
                   }
 
                 vx += v->width;
