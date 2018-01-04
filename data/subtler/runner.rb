@@ -4,7 +4,7 @@
 # @package subtler
 #
 # @file Subtle remote
-# @copyright (c) 2005-2017 Christoph Kappel <unexist@subforge.org>
+# @copyright (c) 2005-2018 Christoph Kappel <unexist@subforge.org>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPLv2.
@@ -14,8 +14,8 @@
 require 'getoptlong'
 require 'subtle/subtlext'
 
-module Subtle # {{{
-  module Subtler # {{{
+module Subtle # {{{ 
+  module Subtler # { {{
     class Runner # {{{
 
     # Signals
@@ -499,7 +499,7 @@ module Subtle # {{{
 
       def version # {{{
         puts <<-EOF
-  subtler #{Subtlext::VERSION} - Copyright (c) 2005-2017 Christoph Kappel
+  subtler #{Subtlext::VERSION} - Copyright (c) 2005-2018 Christoph Kappel
   Released under the GNU General Public License
   Using Ruby #{RUBY_VERSION}
         EOF
