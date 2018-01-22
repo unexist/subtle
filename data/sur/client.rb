@@ -776,7 +776,7 @@ module Subtle # {{{
         body << File.read(file)
         body << "\r\n--#{BOUNDARY}--\r\n"
 
-        # Send reqiest
+        # Send request
         req = Net::HTTP::Post.new(uri.request_uri)
         req.body            = body
         req["Content-Type"] = "multipart/form-data; boundary=#{BOUNDARY}"
