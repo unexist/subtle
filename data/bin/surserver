@@ -21,7 +21,7 @@ rescue LoadError => error
 
   # Check missing files
   if "archive/tar/minitar" == missing
-    missing = "archive-tar-minitar"
+    missing = "minitar"
   end
 
   puts <<EOF
