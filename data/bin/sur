@@ -24,7 +24,7 @@ rescue LoadError => error
 
   # Check missing files
   if "archive/tar/minitar" == missing
-    missing = "archive-tar-minitar"
+    missing = "minitar"
   elsif missing.match("subtle")
     puts <<EOF
 >>> ERROR: Cannot find runtime files of sur
