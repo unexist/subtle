@@ -330,7 +330,7 @@ EOF
   Small Ruby scripts written in a
   %a{:target => "_parent", :href => "http://en.wikipedia.org/wiki/Domain_Specific_Language"} DSL
   that provides things like system information for the
-  %a{:target => "_parent", :href => "http://subtle.subforge.org"} subtle
+  %a{:target => "_parent", :href => "https://subtle.subforge.org"} subtle
   panel.
 
 #form
@@ -341,9 +341,9 @@ EOF
       %input{:type => "submit", :name => "submit", :value => "Go"}
 
   #right
-    %a{:target => "_parent", :href => "http://subforge.org/wiki/subtle/Specification"} Sublet specification
+    %a{:target => "_parent", :href => "https://subforge.org/projects/subtle/wiki/Specification"} Sublet specification
     |
-    %a{:href => "http://sur.subforge.org/sublets"} All sublets
+    %a{:href => "https://sur.subforge.org/sublets"} All sublets
 
 #clear
 
@@ -352,7 +352,7 @@ EOF
   %ul
     -@newest.each do |s|
       %li
-        %a#download{:href => "http://sur.subforge.org/get/%s" % [ s.digest ] }
+        %a#download{:href => "https://sur.subforge.org/get/%s" % [ s.digest ] }
           ="%s-%s" % [ s.name, s.version ]
         ="(%s)" % [ s.tags.map { |t| '<a href="/tag/%s">#%s</a>' % [ t.tag.name, t.tag.name ] }.join(", ") ]
 
@@ -361,7 +361,7 @@ EOF
   %ul
     -@most.each do |s|
       %li
-        %a#download{:href => "http://sur.subforge.org/get/%s" % [ s.digest ] }
+        %a#download{:href => "https://sur.subforge.org/get/%s" % [ s.digest ] }
           ="%s-%s" % [ s.name, s.version ]
         ="(%d)" % [ s.downloads ]
 
@@ -370,7 +370,7 @@ EOF
   %ul
     -@never.each do |s|
       %li
-        %a#download{:href => "http://sur.subforge.org/get/%s" % [ s.digest ] }
+        %a#download{:href => "https://sur.subforge.org/get/%s" % [ s.digest ] }
           ="%s-%s" % [ s.name, s.version ]
         ="(%s)" % [ s.tags.map { |t| '<a href="/tag/%s">#%s</a>' % [ t.tag.name, t.tag.name ] }.join(", ") ]
 
@@ -378,7 +378,7 @@ EOF
   %ul
     -@worst.each do |s|
       %li
-        %a#download{:href => "http://sur.subforge.org/get/%s" % [ s.digest ] }
+        %a#download{:href => "https://sur.subforge.org/get/%s" % [ s.digest ] }
           ="%s-%s" % [ s.name, s.version ]
         ="(%d)" % [ s.annotations ]
 EOF
