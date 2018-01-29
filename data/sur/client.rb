@@ -25,7 +25,7 @@ module Subtle # {{{
     # Client class for interaction with the user
     class Client # {{{
       # Remote repository host
-      HOST = "http://sur.subforge.org"
+      HOST = "https://sur.subforge.org"
 
       # Header separator
       BOUNDARY = "AaB03x"
@@ -766,6 +766,8 @@ module Subtle # {{{
         base   = File.basename(file)
         body   = ""
 
+        http.use_ssl = uri.scheme == "https"
+
         # Assemble data
         body << "--#{BOUNDARY}\r\n"
         body << "Content-Disposition: form-data; name=\"user\"\r\n\r\n"
@@ -806,6 +808,8 @@ module Subtle # {{{
         rescue
           http = Net::HTTP.new(uri.host, uri.port)
         end
+
+        http.use_ssl = uri.scheme == "https"
 
         # Fetch file
         http.request_get("/get/" + spec.digest) do |response|
@@ -916,6 +920,8 @@ module Subtle # {{{
         @cache_remote = []
         uri           = URI.parse(HOST)
         http          = Net::HTTP.new(uri.host, uri.port)
+
+        http.use_ssl = uri.scheme == "https"
 
         # Check age of cache
         if !force and File.exist?(@path_remote) and
