@@ -74,7 +74,7 @@ end
 @defines = {
   "PKG_NAME"      => "subtle",
   "PKG_VERSION"   => "0.11.$(revision)",
-  "PKG_BUGREPORT" => "http://subforge.org/projects/subtle/issues",
+  "PKG_BUGREPORT" => "https://subforge.org/projects/subtle/issues",
   "PKG_CONFIG"    => "subtle.rb",
   "RUBY_VERSION"  => "$(MAJOR).$(MINOR).$(TEENY)"
 }  # }}}

@@ -492,7 +492,7 @@ module Subtle # {{{
     subtler -c -C -Y 5          Set gravity 5 to current active client
     subtler -t -f term          Show every client/view tagged with 'term'
 
-  Please report bugs at http://subforge.org/projects/subtle/issues
+  Please report bugs at https://subforge.org/projects/subtle/issues
 
         EOF
       end # }}}
