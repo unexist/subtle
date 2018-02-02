@@ -457,8 +457,8 @@ end
 #                around tagged clients are absent.
 #
 #                Example: set :borderless
-#                Links:    https://subforge.org/projects/subtle/wiki/Tagging#Borderless
-#                          https://subforge.org/projects/subtle/wiki/Clients#Borderless
+#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Borderless
+#                         https://subforge.org/projects/subtle/wiki/Clients#Borderless
 #
 # [*fixed*]      Enable the fixed mode for tagged clients. When set, the client cannot be
 #                resized anymore.
@@ -492,7 +492,7 @@ end
 #                client on the current screen, regardless of the tags.
 #
 #                Example: set :sticky
-#                Links:  https://subforge.org/projects/subtle/wiki/Tagging#Sticky
+#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Sticky
 #
 # [*urgent*]     Enables the urgent mode for tagged clients. When set, subtle
 #                automatically sets this client to urgent.
@@ -688,7 +688,28 @@ end
 #    icon  "/usr/share/icons/icon.xbm"
 #  end
 #
-# === Properties
+# === Modes
+#
+# Modes can be set with the set option, see below.
+#
+# [*dynamic*]    Enable dynamic mode for views. When set, icons of unoccupied views (views that display no
+#                windows) are hidden.
+#
+#                Example: set :dynamic
+#                Links:   https://subforge.org/projects/subtle/wiki/Views#Dynamic
+#
+# [*icon_only*]  Enable icon only mode. When set, subtle hides the view name from the view buttons, just
+#                the icon will be visible.
+#
+#                Example: set :icon_only
+#                Links:   https://subforge.org/projects/subtle/wiki/Views#Icon_only
+#
+# === Options
+#
+# [*set*]        Set various modes to views. Multiple modes can be set,
+#                separated by comma. (See Modes)
+#
+#                Example: set :dynamic, :icon_only
 #
 # [*match*]      This property adds a matching pattern to a view. Matching
 #                works either via plaintext or regex (see man regex(7)) and
@@ -696,10 +717,7 @@ end
 #
 #                Example: match "terms"
 #
-# [*dynamic*]    This property hides unoccupied views, views that display no
-#                windows.
-#
-#                Example: dynamic true
+
 #
 # [*icon*]       This property adds an icon in front of the view name. The
 #                icon can either be path to an icon or an instance of
@@ -707,12 +725,6 @@ end
 #
 #                Example: icon "/usr/share/icons/icon.xbm"
 #                         icon Subtlext::Icon.new("/usr/share/icons/icon.xbm")
-#
-# [*icon_only*]  This property hides the view name from the view buttons, just
-#                the icon will be visible.
-#
-#                Example: icon_only true
-#
 #
 # === Link
 #
