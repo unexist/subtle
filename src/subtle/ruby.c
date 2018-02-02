@@ -294,8 +294,8 @@ RubySymbolToFlag(VALUE sym,
   else if(CHAR2SYM("zaphod")     == sym) (*flags) |= SUB_CLIENT_MODE_ZAPHOD;
 
   /* View modes */
-  else if(CHAR2SYM("dynamic")     == sym) (*flags) |= SUB_VIEW_DYNAMIC;
-  else if(CHAR2SYM("icons_only")   == sym) (*flags) |= SUB_VIEW_ICON_ONLY;
+  else if(CHAR2SYM("dynamic")    == sym) (*flags) |= SUB_VIEW_DYNAMIC;
+  else if(CHAR2SYM("icons_only") == sym) (*flags) |= SUB_VIEW_ICON_ONLY;
 } /* }}} */
 
 /* RubyArrayToArray {{{ */
