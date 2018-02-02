@@ -54,6 +54,7 @@ end
   "extdir"     => "$(destdir)/$(sitelibdir)/$(PKG_NAME)",
   "mandir"     => "$(destdir)/$(manprefix)/man1",
   "debug"      => "no",
+  "hardening"  => "no",
   "xpm"        => "yes",
   "xft"        => "yes",
   "xinerama"   => "yes",
@@ -279,6 +280,11 @@ task(:config) do
       @options["cflags"] << " -g -DDEBUG"
     else
       @options["cflags"] << " -DNDEBUG"
+    end
+
+    # Hardening
+    if "yes" == @options["hardening"]
+      @options["cflags"] <<  " -fstack-protector-strong -Wformat -Wformat-security"
     end
 
     # Get revision
@@ -515,6 +521,7 @@ Xinerama support....: #{@options["xinerama"]}
 XRandR support......: #{@options["xrandr"]}
 XTest support.......: #{@options["xtest"]}
 Debugging messages..: #{@options["debug"]}
+Hardening...........: #{@options["hardening"]}
 
 EOF
   end
@@ -716,6 +723,7 @@ sysconfdir=PATH    Set config directory (current: #{@options["sysconfdir"]})
 datadir=PATH       Set data directory (current: #{@options["datadir"]})
 mandir=PATH        Set man directory (current: #{@options["mandir"]})
 debug=[yes|no]     Whether to build with debugging messages (current: #{@options["debug"]})
+hardening[yes|no]  Whether to build with gcc hardening flags (current: #{@options["hardening"]})
 xpm=[yes|no]       Whether to build with Xpm support (current: #{@options["xpm"]})
 xft=[yes|no]       Whether to build with Xft support (current: #{@options["xft"]})
 xinerama=[yes|no]  Whether to build with Xinerama support (current: #{@options["xinerama"]})
