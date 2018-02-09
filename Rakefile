@@ -64,7 +64,7 @@ end
   "hdrdir"     => "",
   "archdir"    => "",
   "revision"   => "3224", #< Latest stable
-  "cflags"     => "-Wall -Wpointer-arith -Wstrict-prototypes -Wunused -Wshadow -std=gnu99 " + (ENV["CFLAGS"] || ""),
+  "cflags"     => "-Wall -Wpointer-arith -Wstrict-prototypes -Wunused -Wshadow -Wformat -Wformat-security -std=gnu99 " + (ENV["CFLAGS"] || ""),
   "cpppath"    => "-I. -I$(builddir) -Isrc -Isrc/shared -Isrc/subtle -idirafter$(hdrdir) -idirafter$(archdir) " + (ENV["CPPFLAGS"] || ""),
   "ldflags"    => "$(rpath) -L$(libdir) $(LIBS) -l$(RUBY_SO_NAME) " + (ENV["LDFLAGS"] || ""),
   "extflags"   => "$(LDFLAGS) $(rpath) $(LIBS) -l$(RUBY_SO_NAME)",
@@ -284,7 +284,7 @@ task(:config) do
 
     # Hardening
     if "yes" == @options["hardening"]
-      @options["cflags"] <<  " -fstack-protector-strong -Wformat -Wformat-security"
+      @options["cflags"] <<  " -fstack-protector-strong -D_FORTIFY_SOURCE=2"
     end
 
     # Get revision
