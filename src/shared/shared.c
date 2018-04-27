@@ -337,15 +337,18 @@ subSharedPropertyGeometry(Display *disp,
   XRectangle *geometry)
 {
   Window root = None;
-  unsigned int bw = 0, depth = 0;
-  XRectangle r = { 0 };
+  int x = 0, y = 0;
+  unsigned int width = 0, height = 0, bw = 0, depth = 0;
 
   assert(win && geometry);
 
-  XGetGeometry(disp, win, &root, (int *)&r.x, (int *)&r.y,
-    (unsigned int *)&r.width, (unsigned int *)&r.height, &bw, &depth);
+  XGetGeometry(disp, win, &root, &x, &y,
+    &width, &height, &bw, &depth);
 
-  *geometry = r;
+  geometry->x      = x;
+  geometry->y      = y;
+  geometry->width  = width;
+  geometry->height = height;
 } /* }}} */
 
  /** subSharedPropertyDelete {{{
