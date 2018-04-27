@@ -75,36 +75,39 @@ subViewFocus(SubView *v,
   s1  = SCREEN(subArrayGet(subtle->screens, screenid));
   vid = subArrayIndex(subtle->views, (void *)v);
 
-  /* Check if view is visible on any screen */
-  if(subtle->visible_views & (1L << (vid + 1)))
+  if(s1)
     {
-      /* This only makes sense with more than one screen
-       * otherwise just ignore that */
-      if(1 < subtle->screens->ndata)
+      /* Check if view is visible on any screen */
+      if(subtle->visible_views & (1L << (vid + 1)))
         {
-          int i;
-
-          /* Find screen with view and swap */
-          for(i = 0; i < subtle->screens->ndata; i++)
+          /* This only makes sense with more than one screen
+           * otherwise just ignore that */
+          if(1 < subtle->screens->ndata)
             {
-              SubScreen *s2 = SCREEN(subtle->screens->data[i]);
+              int i;
 
-              if(s2->viewid == vid)
+              /* Find screen with view and swap */
+              for(i = 0; i < subtle->screens->ndata; i++)
                 {
-                  if(swap)
-                    {
-                      /* Swap views */
-                      s2->viewid = s1->viewid;
-                      s1->viewid = vid;
-                    }
-                  else subScreenWarp(s2);
+                  SubScreen *s2 = SCREEN(subtle->screens->data[i]);
 
-                  break;
+                  if(s2 && s2->viewid == vid)
+                    {
+                      if(swap)
+                        {
+                          /* Swap views */
+                          s2->viewid = s1->viewid;
+                          s1->viewid = vid;
+                        }
+                      else subScreenWarp(s2);
+
+                      break;
+                    }
                 }
             }
         }
+      else s1->viewid = vid;
     }
-  else s1->viewid = vid;
 
   /* Finally configure and render */
   subScreenConfigure();
