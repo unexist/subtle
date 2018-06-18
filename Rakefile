@@ -363,9 +363,15 @@ task(:config) do
       ret
     end
 
+    # Check functions
+    FUNCS.each do |f|
+      fail("Func #{f} was not found") unless have_func(f)
+    end
+
     # Check pkg-config for X11
-    checking_for("X11/Xlib.h") do
+    checking_for("package x11") do
       cflags, ldflags, libs = pkg_config("x11")
+
       fail("X11 was not found") if libs.nil?
 
       # Update flags
@@ -376,12 +382,23 @@ task(:config) do
       true
     end
 
+    # Xinerama
+    if "yes" == @options["xinerama"]
+      checking_for("package xinerama") do
+        if have_header("X11/extensions/Xinerama.h")
+          @options["ldflags"]  << " -lXinerama"
+          @options["extflags"] << " -lXinerama"
+        end
+      end
+    end
+
     # Check pkg-config for Xpm
     if "yes" == @options["xpm"]
-      checking_for("X11/Xpm.h") do
+      checking_for("package xpm") do
         ret = false
 
         cflags, ldflags, libs = pkg_config("xpm")
+
         unless libs.nil?
           # Update flags
           @options["cpppath"] << " %s" % [ cflags ]
@@ -399,25 +416,25 @@ task(:config) do
 
     # Check pkg-config for Xft
     if "yes" == @options["xft"]
-      {
-        "freetype" => "freetype2/ftbuild.h",
-        "xft"      => "X11/Xft/Xft.h"
-      }.each do |pkg, header|
-        checking_for(header) do
+      [ "freetype2", "xft" ].each do |pkg| 
+        checking_for("package " + pkg) do
           ret = false
 
           cflags, ldflags, libs = pkg_config(pkg)
 
           # Fix a bug in ruby 2.2.0 (https://bugs.ruby-lang.org/issues/10651)
-          if cflags.empty?
-            cflags << `#{$PKGCONFIG} --cflags xft`.chomp
+          if cflags.nil? or cflags.empty?
+            cflags = `#{$PKGCONFIG} --cflags xft`.chomp
           end
 
           unless libs.nil?
             # Update flags
-            @options["cpppath"] << " %s" % [ cflags ]
-            @options["ldflags"] << " %s %s" % [ ldflags, libs ]
-            @options["extflags"] << " %s %s" % [ ldflags, libs ]
+            @options["cpppath"] << " %s" % [ cflags ] unless cflags.nil?
+
+            unless ldflags.nil?
+              @options["ldflags"] << " %s %s" % [ ldflags, libs ]
+              @options["extflags"] << " %s %s" % [ ldflags, libs ]
+            end
 
             $defs.push("-DHAVE_X11_XFT_XFT_H")
             ret = true
@@ -426,16 +443,7 @@ task(:config) do
           end
 
           ret
-
         end
-      end
-    end
-
-    # Xinerama
-    if "yes" == @options["xinerama"]
-      if have_header("X11/extensions/Xinerama.h")
-        @options["ldflags"]  << " -lXinerama"
-        @options["extflags"] << " -lXinerama"
       end
     end
 
@@ -444,8 +452,9 @@ task(:config) do
       ret = false
 
       # Pkg-config
-      checking_for("X11/extensions/Xrandr.h") do
+      checking_for("package xrandr") do
         cflags, ldflags, libs = pkg_config("xrandr")
+
         unless libs.nil?
           # Version check (xrandr >= 1.3)
           if try_func("XRRGetScreenResourcesCurrent", libs)
@@ -471,7 +480,7 @@ task(:config) do
     if "yes" == @options["xtest"]
       ret = false
 
-      checking_for("X11/extensions/XTest.h") do
+      checking_for("package xtest") do
         # Check for debian header/lib separation
         if try_func("XTestFakeKeyEvent", "-lXtst")
           @options["extflags"] << " -lXtst"
@@ -487,11 +496,6 @@ task(:config) do
 
         ret
       end
-    end
-
-    # Check functions
-    FUNCS.each do |f|
-      fail("Func #{f} was not found") unless have_func(f)
     end
 
     # Encoding
