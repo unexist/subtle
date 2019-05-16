@@ -118,7 +118,7 @@ SubtleLevel(const char *str)
         level |= SUB_LOG_XERROR;
       else if(0 == strncasecmp(tok, "subtle", 6))
         level |= SUB_LOG_SUBTLE;
-      else if(0 == strncasecmp(tok, "debug", 4))
+      else if(0 == strncasecmp(tok, "debug", 5))
         level |= SUB_LOG_DEBUG;
 
       tok = strtok(NULL, ",");
