@@ -4,7 +4,7 @@
 # @package subtler
 #
 # @file Subtle remote
-# @copyright (c) 2005-2018 Christoph Kappel <unexist@subforge.org>
+# @copyright (c) 2005-2020 Christoph Kappel <unexist@subforge.org>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPLv2.

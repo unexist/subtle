@@ -3,7 +3,7 @@
 # @package subtle
 #
 # @file Rake build file
-# @copyright (c) 2005-2018 Christoph Kappel <unexist@subforge.org>
+# @copyright (c) 2005-2020 Christoph Kappel <unexist@subforge.org>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPL.
@@ -74,7 +74,7 @@ end
 
 @defines = {
   "PKG_NAME"      => "subtle",
-  "PKG_VERSION"   => "0.11.$(revision)",
+  "PKG_VERSION"   => "0.12.$(revision)",
   "PKG_BUGREPORT" => "https://subforge.org/projects/subtle/issues",
   "PKG_CONFIG"    => "subtle.rb",
   "RUBY_VERSION"  => "$(MAJOR).$(MINOR).$(TEENY)"
@@ -416,7 +416,7 @@ task(:config) do
 
     # Check pkg-config for Xft
     if "yes" == @options["xft"]
-      [ "freetype2", "xft" ].each do |pkg| 
+      [ "freetype2", "xft" ].each do |pkg|
         checking_for("package " + pkg) do
           ret = false
 
