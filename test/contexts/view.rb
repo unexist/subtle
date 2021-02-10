@@ -2,7 +2,7 @@
 # @package test
 #
 # @file Test Subtlext::View functions
-# @author Christoph Kappel <unexist@subforge.org>
+# @author Christoph Kappel <christroph@unexist.dev>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPLv2.

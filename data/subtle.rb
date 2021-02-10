@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 #
-# Author::  Christoph Kappel <unexist@subforge.org>
+# Author::  Christoph Kappel <christroph@unexist.dev>
 # Version:: $Id$
 # License:: GNU GPLv2
 #
