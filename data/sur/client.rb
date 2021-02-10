@@ -25,7 +25,7 @@ module Subtle # {{{
     # Client class for interaction with the user
     class Client # {{{
       # Remote repository host
-      HOST = "https://sur.subforge.org"
+      HOST = "https://sur.subtle.de"
 
       # Header separator
       BOUNDARY = "AaB03x"
