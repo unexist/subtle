@@ -3,7 +3,7 @@
   * @package subtle
   *
   * @file Main functions
-  * @copyright (c) 2005-2021 Christoph Kappel <christoph@unexist.dev>
+  * @copyright (c) 2005-2022 Christoph Kappel <christoph@unexist.dev>
   * @version $Id$
   *
   * This program can be distributed under the terms of the GNU GPLv2.
@@ -82,7 +82,7 @@ SubtleUsage(void)
 static void
 SubtleVersion(void)
 {
-  printf("%s %s - Copyright (c) 2005-2021 Christoph Kappel\n" \
+  printf("%s %s - Copyright (c) 2005-2022 Christoph Kappel\n" \
          "Released under the GNU General Public License\n" \
          "Compiled for X%dR%d and Ruby %s\n",
          PKG_NAME, PKG_VERSION, X_PROTOCOL, X_PROTOCOL_REVISION, RUBY_VERSION);
