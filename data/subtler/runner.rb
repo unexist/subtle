@@ -4,7 +4,7 @@
 # @package subtler
 #
 # @file Subtle remote
-# @copyright (c) 2005-2021 Christoph Kappel <christoph@unexist.dev>
+# @copyright (c) 2005-present Christoph Kappel <christoph@unexist.dev>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPLv2.
@@ -492,14 +492,14 @@ module Subtle # {{{
     subtler -c -C -Y 5          Set gravity 5 to current active client
     subtler -t -f term          Show every client/view tagged with 'term'
 
-  Please report bugs at https://subforge.org/projects/subtle/issues
+  Please report bugs at https://subtle.de/projects/subtle/issues
 
         EOF
       end # }}}
 
       def version # {{{
         puts <<-EOF
-  subtler #{Subtlext::VERSION} - Copyright (c) 2005-2018 Christoph Kappel
+  subtler #{Subtlext::VERSION} - Copyright (c) 2005-present Christoph Kappel
   Released under the GNU General Public License
   Using Ruby #{RUBY_VERSION}
         EOF

@@ -3,7 +3,7 @@
 # @package sur
 #
 # @file Server functions
-# @author Christoph Kappel <christroph@unexist.dev>
+# @author Christoph Kappel <christoph@unexist.dev>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPLv2.
@@ -330,7 +330,7 @@ EOF
   Small Ruby scripts written in a
   %a{:target => "_parent", :href => "http://en.wikipedia.org/wiki/Domain_Specific_Language"} DSL
   that provides things like system information for the
-  %a{:target => "_parent", :href => "https://subtle.subforge.org"} subtle
+  %a{:target => "_parent", :href => "https://subtle.de"} subtle
   panel.
 
 #form
@@ -341,7 +341,7 @@ EOF
       %input{:type => "submit", :name => "submit", :value => "Go"}
 
   #right
-    %a{:target => "_parent", :href => "https://subforge.org/projects/subtle/wiki/Specification"} Sublet specification
+    %a{:target => "_parent", :href => "https://subtle.de/projects/subtle/wiki/Specification"} Sublet specification
     |
     %a{:href => "https://sur.subtle.de/sublets"} All sublets
 

@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 #
-# Author::  Christoph Kappel <christroph@unexist.dev>
+# Author::  Christoph Kappel <christoph@unexist.dev>
 # Version:: $Id$
 # License:: GNU GPLv2
 #
@@ -86,9 +86,9 @@ set :skip_urgent_warp, false
 #
 # === Links
 #
-# https://subforge.org/projects/subtle/wiki/Styles
-# https://subforge.org/projects/subtle/wiki/Multihead
-# https://subforge.org/projects/subtle/wiki/Panel
+# https://subtle.de/projects/subtle/wiki/Styles
+# https://subtle.de/projects/subtle/wiki/Multihead
+# https://subtle.de/projects/subtle/wiki/Panel
 
 # Style for all style elements
 style :all do
@@ -176,7 +176,7 @@ end
 #
 # === Link
 #
-# https://subforge.org/projects/subtle/wiki/Gravity
+# https://subtle.de/projects/subtle/wiki/Gravity
 #
 
 # Top left
@@ -302,7 +302,7 @@ gravity :gimp_dock,      [  90,   0,  10, 100 ]
 #
 # === Link
 #
-# https://subforge.org/projects/subtle/wiki/Grabs
+# https://subtle.de/projects/subtle/wiki/Grabs
 #
 
 # Jump to view1, view2, ...
@@ -457,42 +457,42 @@ end
 #                around tagged clients are absent.
 #
 #                Example: set :borderless
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Borderless
-#                         https://subforge.org/projects/subtle/wiki/Clients#Borderless
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Borderless
+#                         https://subtle.de/projects/subtle/wiki/Clients#Borderless
 #
 # [*fixed*]      Enable the fixed mode for tagged clients. When set, the client cannot be
 #                resized anymore.
 #
 #                Example: set :fixed
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Fixed
-#                         https://subforge.org/projects/subtle/wiki/Clients#Fixed
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Fixed
+#                         https://subtle.de/projects/subtle/wiki/Clients#Fixed
 #
 # [*floating*]   Enables the float mode for tagged clients.
 #
 #                Example: set :floating
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Floating
-#                         https://subforge.org/projects/subtle/wiki/Clients#Floating
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Floating
+#                         https://subtle.de/projects/subtle/wiki/Clients#Floating
 #
 # [*full*]       Enable the fullscreen mode for tagged clients. When set, the client
 #                covers the whole screen size.
 #
 #                Example: set :full
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Fullscreen
-#                         https://subforge.org/projects/subtle/wiki/Clients#Fullscreen
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Fullscreen
+#                         https://subtle.de/projects/subtle/wiki/Clients#Fullscreen
 #
 # [*resize*]     Enable resize mode for tagged clients. When set, subtle honors size
 #                hints, that define various size constraints like sizes for columns
 #                and rows of a terminal.
 #
 #                Example: set :resize
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Resize
-#                         https://subforge.org/projects/subtle/wiki/Clients#Resize
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Resize
+#                         https://subtle.de/projects/subtle/wiki/Clients#Resize
 #
 # [*sticky*]     Enable sticky mode for tagged clients. When set, subtle keeps the
 #                client on the current screen, regardless of the tags.
 #
 #                Example: set :sticky
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Sticky
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Sticky
 #
 # [*urgent*]     Enables the urgent mode for tagged clients. When set, subtle
 #                automatically sets this client to urgent.
@@ -501,15 +501,15 @@ end
 #                a visual bell in a term.
 #
 #                Example: set :urgent
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Stick
-#                         https://subforge.org/projects/subtle/wiki/Clients#Urgent
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Stick
+#                         https://subtle.de/projects/subtle/wiki/Clients#Urgent
 #
 # [*zaphod*]     Enables the zaphod mode for tagged clients. When set, the client
 #                spans across all connected screens.
 #
 #                Example: set :zaphod
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Zaphod
-#                         https://subforge.org/projects/subtle/wiki/Clients#Zaphod
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Zaphod
+#                         https://subtle.de/projects/subtle/wiki/Clients#Zaphod
 #
 # === Options
 #
@@ -524,13 +524,13 @@ end
 #                width and height must be >0.
 #
 #                Example: geometry [100, 100, 50, 50]
-#                Link:    https://subforge.org/projects/subtle/wiki/Tagging#Geometry
+#                Link:    https://subtle.de/projects/subtle/wiki/Tagging#Geometry
 #
 # [*gravity*]    Set a certain to gravity to the tagged client, but only on views
 #                that have this tag in common.
 #
 #                Example: gravity :center
-#                Link:    https://subforge.org/projects/subtle/wiki/Tagging#Gravity
+#                Link:    https://subtle.de/projects/subtle/wiki/Tagging#Gravity
 #
 # [*match*]      Add matching patterns to a tag, this can be done more than once.
 #
@@ -548,7 +548,7 @@ end
 #                Examples: match instance: "urxvt"
 #                          match [:role, :class] => "test"
 #                          match "[xa]+term"
-#                Link:     https://subforge.org/projects/subtle/wiki/Tagging#Match
+#                Link:     https://subtle.de/projects/subtle/wiki/Tagging#Match
 #
 # [*on_match*]   Add a Ruby proc that is executed when this tag matches
 #
@@ -568,7 +568,7 @@ end
 #                Expected is an array with x and y values.
 #
 #                Example: position [ 10, 10 ]
-#                Link:    https://subforge.org/projects/subtle/wiki/Tagging#Position
+#                Link:    https://subtle.de/projects/subtle/wiki/Tagging#Position
 #
 # [*stick_to*]   Keep a tagged client on the given screen. When set, clients are
 #                visible on all views, even when they don't have matching tags.
@@ -576,8 +576,8 @@ end
 #                On multihead, sticky clients keep the screen they are assigned to.
 #
 #                Example: stick_to 1
-#                Links:   https://subforge.org/projects/subtle/wiki/Tagging#Stick
-#                         https://subforge.org/projects/subtle/wiki/Clients#Stick
+#                Links:   https://subtle.de/projects/subtle/wiki/Tagging#Stick
+#                         https://subtle.de/projects/subtle/wiki/Clients#Stick
 #
 # [*type*]       Set the window type of the tagged client, this will force it to be
 #                treated as a specific window type though as the window sets the type by
@@ -586,22 +586,22 @@ end
 #                Following types are possible:
 #
 #                [*:desktop*]  Treat as desktop window (_NET_WM_WINDOW_TYPE_DESKTOP)
-#                              Link: https://subforge.org/projects/subtle/wiki/Clients#Desktop
+#                              Link: https://subtle.de/projects/subtle/wiki/Clients#Desktop
 #                [*:dock*]     Treat as dock window (_NET_WM_WINDOW_TYPE_DOCK)
-#                              Link: https://subforge.org/projects/subtle/wiki/Clients#Dock
+#                              Link: https://subtle.de/projects/subtle/wiki/Clients#Dock
 #                [*:toolbar*]  Treat as toolbar windows (_NET_WM_WINDOW_TYPE_TOOLBAR)
-#                              Link: https://subforge.org/projects/subtle/wiki/Clients#Toolbar
+#                              Link: https://subtle.de/projects/subtle/wiki/Clients#Toolbar
 #                [*:splash*]   Treat as splash window (_NET_WM_WINDOW_TYPE_SPLASH)
-#                              Link: https://subforge.org/projects/subtle/wiki/Clients#Splash
+#                              Link: https://subtle.de/projects/subtle/wiki/Clients#Splash
 #                [*:dialog*]   Treat as dialog window (_NET_WM_WINDOW_TYPE_DIALOG)
-#                              Link: https://subforge.org/projects/subtle/wiki/Clients#Dialog
+#                              Link: https://subtle.de/projects/subtle/wiki/Clients#Dialog
 #
 #                Example: type :desktop
-#                Link:    https://subforge.org/projects/subtle/wiki/Tagging#Type
+#                Link:    https://subtle.de/projects/subtle/wiki/Tagging#Type
 #
 # === Link
 #
-# https://subforge.org/projects/subtle/wiki/Tagging
+# https://subtle.de/projects/subtle/wiki/Tagging
 #
 
 # Simple tags
@@ -696,13 +696,13 @@ end
 #                windows) are hidden.
 #
 #                Example: set :dynamic
-#                Links:   https://subforge.org/projects/subtle/wiki/Views#Dynamic
+#                Links:   https://subtle.de/projects/subtle/wiki/Views#Dynamic
 #
 # [*icon_only*]  Enable icon only mode. When set, subtle hides the view name from the view buttons, just
 #                the icon will be visible.
 #
 #                Example: set :icon_only
-#                Links:   https://subforge.org/projects/subtle/wiki/Views#Icon_only
+#                Links:   https://subtle.de/projects/subtle/wiki/Views#Icon_only
 #
 # === Options
 #
@@ -728,7 +728,7 @@ end
 #
 # === Link
 #
-# https://subforge.org/projects/subtle/wiki/Tagging
+# https://subtle.de/projects/subtle/wiki/Tagging
 #
 
 view "terms", "terms|default"
@@ -795,7 +795,7 @@ view "dev",   "editor"
 #
 #  === Link
 #
-# https://subforge.org/projects/subtle/wiki/Sublets
+# https://subtle.de/projects/subtle/wiki/Sublets
 #
 
 #
@@ -834,7 +834,7 @@ view "dev",   "editor"
 #
 # === Link
 #
-# https://subforge.org/projects/subtle/wiki/Hooks
+# https://subtle.de/projects/subtle/wiki/Hooks
 #
 
 # vim:ts=2:bs=2:sw=2:et:fdm=marker

@@ -3,7 +3,7 @@
 # @package sur
 #
 # @file Runner functions
-# @author Christoph Kappel <christroph@unexist.dev>
+# @author Christoph Kappel <christoph@unexist.dev>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPLv2.
@@ -316,13 +316,13 @@ module Subtle # {{{
                  "  yank [-v VERSION]                       Delete sublet from server\n"
         end
 
-        puts "\nPlease report bugs at https://subforge.org/projects/subtle/issues\n"
+        puts "\nPlease report bugs at https://subtle.de/projects/subtle/issues\n"
 
         exit
       end # }}}
 
       def version # {{{
-        puts "Sur #{VERSION} - Copyright (c) 2009-2013 Christoph Kappel\n" \
+        puts "Sur #{VERSION} - Copyright (c) 2009-present Christoph Kappel\n" \
              "Released under the GNU General Public License\n"
       end # }}}
     end # }}}

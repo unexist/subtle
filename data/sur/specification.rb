@@ -3,7 +3,7 @@
 # @package sur
 #
 # @file Specification functions
-# @author Christoph Kappel <christroph@unexist.dev>
+# @author Christoph Kappel <christoph@unexist.dev>
 # @version $Id$
 #
 # This program can be distributed under the terms of the GNU GPLv2.
