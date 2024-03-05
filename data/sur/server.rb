@@ -457,15 +457,18 @@ EOF
         end # }}}
 
         get "/get/:digest" do # {{{
-          if((s = Sur::Model::Sublet.first(:digest => params[:digest])) && File.exist?(s.path))
-
+          if((s = Sur::Model::Sublet.first(:digest => params[:digest])))
+            # Increment count
             s.downloads = s.downloads + 1
             s.save
 
-            send_file(s.path, :type => "application/x-tar", :filename => File.basename(s.path))
+            # Send requested file
+            send_file(File.join(REPOSITORY, s.path),
+              :type     => "application/x-tar",
+              :filename => File.basename(s.path)
+            )
           else
-            puts ">>> WARNING: Couldn't find sublet with digest `#{params[:digest]}`"
-            error = 404
+            halt 404
           end
         end # }}}
 
@@ -525,6 +528,126 @@ EOF
           else
             puts ">>> WARNING: Cannot find sublet with digest `#{params[:digest]}`"
             halt 404
+          end
+        end # }}}
+
+        post "/submit" do # {{{
+          # Check if required params are available
+          if(params[:file] and params[:file][:tempfile] and params[:user])
+            file = params[:file][:tempfile]
+
+            # Validate spec
+            spec = Sur::Specification.extract_spec(file.path)
+            halt 415 unless(spec.valid?)
+
+            begin
+              # Create or find sublet
+              s = Sur::Model::Sublet.first_or_create(
+                { :name => spec.name, :version => spec.version },
+                {
+                  :contact     => spec.contact,
+                  :description => spec.description,
+                  :date        => spec.date,
+                  :path        => spec.to_s + ".sublet",
+                  :digest      => Digest::MD5.hexdigest(File.read(file.path)),
+                  :ip          => request.env["REMOTE_ADDR"][/.[^,]+/],
+                  :required    => spec.required_version,
+                  :created_at  => Time.now
+                }
+              )
+
+              # Create or find user
+              u = Sur::Model::User.first_or_create(
+                { :name       => params[:user] },
+                { :created_at => Time.now      }
+              )
+
+              # Parse authors
+              spec.authors.each do |user|
+                # Check if user exists
+                u = Sur::Model::User.first_or_create(
+                  { :name       => user     },
+                  { :created_at => Time.now }
+                )
+
+                # Find or create assoc
+                assoc = Sur::Model::Assoc::Author.first_or_create(
+                  { :user_id    => u.id, :sublet_id => s.id },
+                  { :created_at => Time.now                 }
+                )
+              end
+
+              # Parse tags
+              spec.tags.each do |tag|
+                # Find or create tag
+                t = Sur::Model::Tag.first_or_create(
+                  { :name       => tag      },
+                  { :created_at => Time.now }
+                )
+
+                # Find or create assoc
+                assoc = Sur::Model::Assoc::Tag.first_or_create(
+                  { :tag_id     => t.id, :sublet_id => s.id },
+                  { :created_at => Time.now                 }
+                )
+              end
+            rescue => error
+              p error
+              halt 500
+            end
+
+            # Copy file and update cache
+            begin
+              FileUtils.copy(file.path, File.join(REPOSITORY, s.path))
+              build_cache
+            rescue => error
+              p error
+              halt 500
+            end
+
+            # Post via identi.ca
+            unless(USERNAME.empty? or PASSWORD.empty?)
+              uri = URI.parse("http://identi.ca/api/statuses/update.xml")
+
+              # Create request
+              req = Net::HTTP::Post.new(uri.path)
+              req.basic_auth(USERNAME, PASSWORD)
+              req.set_form_data(
+                {
+                  "status" => "New sublet: %s (%s) !subtle" % [
+                    spec.name, spec.version
+                  ]
+                }, ";"
+              )
+
+              # Finally send request
+              Net::HTTP.new(uri.host).start { |http| http.request(req) }
+            end
+
+            halt 200
+          else
+            halt 405
+          end
+        end # }}}
+
+        post "/xmlrpc" do # {{{
+          xml = @request.body.read
+
+          if(xml.empty?)
+            error = 400
+            return
+          end
+
+          # Parse xml
+          method, arguments = XMLRPC::Marshal.load_call(xml)
+          method = method.gsub(/([A-Z])/, '_\1').downcase
+
+          # Check if method exists
+          if(respond_to?(method))
+            content_type("text/xml", :charset => "utf-8")
+            send(method, arguments)
+          else
+            error = 404
           end
         end # }}}
 
