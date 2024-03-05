@@ -456,7 +456,27 @@ EOF
           haml(:index)
         end # }}}
 
+        get "/get/:digest" do # {{{
+          if((s = Sur::Model::Sublet.first(:digest => params[:digest])) && File.exist?(s.path))
 
+            s.downloads = s.downloads + 1
+            s.save
+
+            send_file(s.path, :type => "application/x-tar", :filename => File.basename(s.path))
+          else
+            puts ">>> WARNING: Couldn't find sublet with digest `#{params[:digest]}`"
+            error = 404
+          end
+        end # }}}
+
+        get "/list" do # {{{
+          # Check cache age
+          if(!File.exist?(CACHE) or (86400 < (Time.now - File.new(CACHE).ctime)))
+            build_sublets
+          end
+
+          send_file(CACHE, :type => "text/plain", :last_modified => File.new(CACHE).ctime)
+        end # }}}
 
         get "/tag/:tag" do # {{{
           @tag  = params[:tag].capitalize
