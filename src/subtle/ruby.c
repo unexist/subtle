@@ -1965,7 +1965,7 @@ RubyConfigLoadConfig(VALUE self,
  *
  * Set various WM options 
  *
- * https://subforge.org/projects/subtle/wiki/Config#Settings
+ * https://subtle.de/projects/subtle/wiki/Config#Settings
  *
  *  set :urgent_dialogs, true
  */
@@ -2141,7 +2141,7 @@ RubyConfigStyle(VALUE self,
  * Create a new gravity and optionally enable tiling, either
  * horizonally (:horz) or vertically. (:vert) inside of the grid
  *
- * https://subforge.org/projects/subtle/wiki/Gravity
+ * https://subtle.de/projects/subtle/wiki/Gravity
  *
  *  gravity :top_left, [0, 0, 50, 50]
  *
@@ -2234,7 +2234,7 @@ RubyConfigGrab(int argc,
  * Create a new tag either with a regexp or with a block
  * to set additional properties
  *
- * https://subforge.org/projects/subtle/wiki/Tagging
+ * https://subtle.de/projects/subtle/wiki/Tagging
  *
  *  tag "terms", "xterm|[u]?rxvt"
  *
@@ -2397,7 +2397,7 @@ RubyConfigTag(int argc,
  *
  * Create a new view with a regex to match tags
  *
- * https://subforge.org/projects/subtle/wiki/Views
+ * https://subtle.de/projects/subtle/wiki/Views
  *
  *  view "foobar", "regex"
  */
@@ -2497,7 +2497,7 @@ RubyConfigView(int argc,
  *
  * Split a physical screen in virtual ones
  *
- * https://subforge.org/projects/subtle/wiki/Config/#Screens
+ * https://subtle.de/projects/subtle/wiki/Config/#Screens
  *
  *  screen 1 do
  *    virtual [  0, 0, 50, 100 ]
@@ -2585,7 +2585,7 @@ RubyConfigScreen(VALUE self,
  *
  * Set properties of sublets
  *
- * https://subforge.org/projects/subtle/wiki/Sublets
+ * https://subtle.de/projects/subtle/wiki/Sublets
  *
  *  sublet :clock do
  *    interval 20
