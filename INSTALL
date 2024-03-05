@@ -23,7 +23,7 @@ Versions
 Stable releases can be found here[8]. If you like you can clone the Mercurial[9]
 repository and install the developer version as followed:
 
- 1. hg clone http://hg.subforge.org/subtle
+ 1. hg clone http://hg.subtle.de/subtle
  2. cd subtle
  3. rake [options]
  4. rake install
@@ -66,8 +66,8 @@ get the latest options and check the latest news.
 [5] http://rubyforge.org/projects/ruwiki
 [6] http://datamapper.org
 [7] http://www.sinatrarb.com
-[8] https://subforge.org/projects/list_files/subtle
+[8] https://subtle.de/projects/list_files/subtle
 [9] http://www.selenic.com/mercurial
 [10] http://standards.freedesktop.org/basedir-spec/latest/
-[11] https://subforge.org/wiki/subtle/Subtle
-[12] https://subforge.org/wiki/subtle/Sublets
+[11] https://subtle.de/wiki/subtle/Subtle
+[12] https://subtle.de/wiki/subtle/Sublets
