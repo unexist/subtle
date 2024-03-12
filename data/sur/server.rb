@@ -475,7 +475,7 @@ EOF
         get "/list" do # {{{
           # Check cache age
           if(!File.exist?(CACHE) or (86400 < (Time.now - File.new(CACHE).ctime)))
-            build_sublets
+            build_cache
           end
 
           send_file(CACHE, :type => "text/plain", :last_modified => File.new(CACHE).ctime)
