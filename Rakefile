@@ -288,7 +288,7 @@ task(:config) do
     end
 
     # Get revision
-    if File.exists?(".hg") and (hg = find_executable0("hg"))
+    if File.exist?(".hg") and (hg = find_executable0("hg"))
       match = `#{hg} tip`.match(/^[^:]+:\s*(\d+).*/)
 
       if !match.nil? and 2 == match.size
