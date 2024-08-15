@@ -252,7 +252,7 @@ task(:config) do
   end
 
   # Check if options.yaml exists or config is run explicitly
-  if( !ARGV.nil? and !ARGV.include?("config")) and File.exist?("config.yml")
+  if (!ARGV.nil? and !ARGV.include?("config")) and File.exist?("config.yml")
     yaml = YAML::load(File.open("config.yml"))
     @options, @defines = YAML::load(yaml)
 
