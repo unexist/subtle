@@ -1,197 +1,172 @@
 
- /**
-  * @package subtlext
-  *
-  * @file Client functions
-  * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
-  * @version $Id$
-  *
-  * This program can be distributed under the terms of the GNU GPLv2.
-  * See the file COPYING for details.
-  **/
+/**
+ * @package subtlext
+ *
+ * @file Client functions
+ * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPLv2.
+ * See the file COPYING for details.
+ **/
 
 #include "subtlext.h"
 
 /* ClientRestack {{{ */
 VALUE
-ClientRestack(VALUE self,
-  int detail)
-{
-  VALUE win = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+ClientRestack(VALUE self, int detail) {
+    VALUE win = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Send message */
-  data.l[0] = 2; ///< Claim to be a pager
-  data.l[1] = NUM2LONG(win);
-  data.l[2] = detail;
+    /* Send message */
+    data.l[0] = 2; ///< Claim to be a pager
+    data.l[1] = NUM2LONG(win);
+    data.l[2] = detail;
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    "_NET_RESTACK_WINDOW", data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), "_NET_RESTACK_WINDOW", data, 32, True);
 
-  return self;
+    return self;
 } /* }}} */
 
 /* ClientFlagsGet {{{ */
-static VALUE
-ClientFlagsGet(VALUE self,
-  int flag)
-{
-  VALUE flags = Qnil;
+static VALUE ClientFlagsGet(VALUE self, int flag) {
+    VALUE flags = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@flags", flags)
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@flags", flags)
 
-  flags = rb_iv_get(self, "@flags");
+    flags = rb_iv_get(self, "@flags");
 
-  return (FIXNUM_P(flags) && FIX2INT(flags) & flag) ? Qtrue : Qfalse;
+    return (FIXNUM_P(flags) && FIX2INT(flags) & flag) ? Qtrue : Qfalse;
 } /* }}} */
 
 /* ClientFlagsSet {{{ */
-static VALUE
-ClientFlagsSet(VALUE self,
-  int flag,
-  int toggle)
-{
-  int iflags = flag;
-  VALUE win = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+static VALUE ClientFlagsSet(VALUE self, int flag, int toggle) {
+    int iflags = flag;
+    VALUE win = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  /* Toggle flags */
-  if(toggle)
-    {
-      VALUE flags = Qnil;
+    /* Toggle flags */
+    if (toggle) {
+        VALUE flags = Qnil;
 
-      GET_ATTR(self, "@flags", flags);
+        GET_ATTR(self, "@flags", flags);
 
-      iflags = FIX2INT(flags);
-      if(iflags & flag) iflags &= ~flag;
-      else iflags |= flag;
+        iflags = FIX2INT(flags);
+        if (iflags & flag)
+            iflags &= ~flag;
+        else
+            iflags |= flag;
     }
 
-  /* Assemble message */
-  data.l[0] = NUM2LONG(win);
-  data.l[1] = iflags;
+    /* Assemble message */
+    data.l[0] = NUM2LONG(win);
+    data.l[1] = iflags;
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    "SUBTLE_CLIENT_FLAGS", data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_CLIENT_FLAGS", data, 32, True);
 
-  rb_iv_set(self, "@flags", INT2FIX(iflags));
+    rb_iv_set(self, "@flags", INT2FIX(iflags));
 
-  return self;
+    return self;
 } /* }}} */
 
 /* ClientFlagsToggle {{{ */
-static VALUE
-ClientFlagsToggle(VALUE self,
-  char *type,
-  int flag)
-{
-  int iflags = 0;
-  VALUE win = Qnil, flags = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+static VALUE ClientFlagsToggle(VALUE self, char *type, int flag) {
+    int iflags = 0;
+    VALUE win = Qnil, flags = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win",   win);
-  GET_ATTR(self, "@flags", flags);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
+    GET_ATTR(self, "@flags", flags);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Update flags */
-  iflags = FIX2INT(flags);
-  if(iflags & flag) iflags &= ~flag;
-  else iflags |= flag;
+    /* Update flags */
+    iflags = FIX2INT(flags);
+    if (iflags & flag)
+        iflags &= ~flag;
+    else
+        iflags |= flag;
 
-  rb_iv_set(self, "@flags", INT2FIX(iflags));
+    rb_iv_set(self, "@flags", INT2FIX(iflags));
 
-  /* Send message */
-  data.l[0] = XInternAtom(display, "_NET_WM_STATE_TOGGLE", False);
-  data.l[1] = XInternAtom(display, type, False);
+    /* Send message */
+    data.l[0] = XInternAtom(display, "_NET_WM_STATE_TOGGLE", False);
+    data.l[1] = XInternAtom(display, type, False);
 
-  subSharedMessage(display, NUM2LONG(win), "_NET_WM_STATE", data, 32, True);
+    subSharedMessage(display, NUM2LONG(win), "_NET_WM_STATE", data, 32, True);
 
-  return self;
+    return self;
 } /* }}} */
 
 /* ClientGravity {{{ */
-static int
-ClientGravity(VALUE key,
-  VALUE value,
-  VALUE client)
-{
-  SubMessageData data = { .l = { -1, -1, -1, -1, -1 } };
+static int ClientGravity(VALUE key, VALUE value, VALUE client) {
+    SubMessageData data = {.l = {-1, -1, -1, -1, -1}};
 
-  data.l[0] = NUM2LONG(rb_iv_get(client, "@win"));
+    data.l[0] = NUM2LONG(rb_iv_get(client, "@win"));
 
-  /* Find gravity */
-  if(RTEST(value))
-    {
-      VALUE gravity = Qnil;
+    /* Find gravity */
+    if (RTEST(value)) {
+        VALUE gravity = Qnil;
 
-      if(RTEST((gravity = subextGravitySingFirst(Qnil, value))))
-        data.l[1] = FIX2INT(rb_iv_get(gravity, "@id"));
+        if (RTEST((gravity = subextGravitySingFirst(Qnil, value))))
+            data.l[1] = FIX2INT(rb_iv_get(gravity, "@id"));
     }
 
-  /* Find view id if any */
-  if(RTEST(key))
-    {
-      VALUE view = Qnil;
+    /* Find view id if any */
+    if (RTEST(key)) {
+        VALUE view = Qnil;
 
-      if(RTEST((view = subextViewSingFirst(Qnil, key))))
-        data.l[2] = FIX2INT(rb_iv_get(view, "@id"));
+        if (RTEST((view = subextViewSingFirst(Qnil, key))))
+            data.l[2] = FIX2INT(rb_iv_get(view, "@id"));
     }
 
-  /* Finally send message */
-  if(-1 != data.l[0] && -1 != data.l[1])
-    {
-      subSharedMessage(display, DefaultRootWindow(display),
-        "SUBTLE_CLIENT_GRAVITY", data, 32, True);
+    /* Finally send message */
+    if (-1 != data.l[0] && -1 != data.l[1]) {
+        subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_CLIENT_GRAVITY", data, 32,
+                         True);
     }
 
-  return ST_CONTINUE;
+    return ST_CONTINUE;
 } /* }}} */
 
 /* ClientFind {{{ */
-static VALUE
-ClientFind(VALUE value,
-  int first)
-{
-  int flags = 0;
-  VALUE parsed = Qnil;
-  char buf[50] = { 0 };
+static VALUE ClientFind(VALUE value, int first) {
+    int flags = 0;
+    VALUE parsed = Qnil;
+    char buf[50] = {0};
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Check object type */
-  switch(rb_type(parsed = subextSubtlextParse(
-      value, buf, sizeof(buf), &flags)))
-    {
-      case T_SYMBOL:
-        if(CHAR2SYM("visible") == parsed)
-          return subextClientSingVisible(Qnil);
-        else if(CHAR2SYM("all") == parsed)
-          return subextClientSingList(Qnil);
-        else if(CHAR2SYM("current") == parsed)
-          return subextClientSingCurrent(Qnil);
-        break;
-      case T_OBJECT:
-        if(rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Client"))))
-          return parsed;
+    /* Check object type */
+    switch (rb_type(parsed = subextSubtlextParse(value, buf, sizeof(buf), &flags))) {
+        case T_SYMBOL:
+            if (CHAR2SYM("visible") == parsed)
+                return subextClientSingVisible(Qnil);
+            else if (CHAR2SYM("all") == parsed)
+                return subextClientSingList(Qnil);
+            else if (CHAR2SYM("current") == parsed)
+                return subextClientSingCurrent(Qnil);
+            break;
+        case T_OBJECT:
+            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Client"))))
+                return parsed;
     }
 
-  return subextSubtlextFindWindows("_NET_CLIENT_LIST", "Client",
-    buf, flags, first);
+    return subextSubtlextFindWindows("_NET_CLIENT_LIST", "Client", buf, flags, first);
 } /* }}} */
 
 /* Singleton */
@@ -207,11 +182,10 @@ ClientFind(VALUE value,
  */
 
 VALUE
-subextClientSingSelect(VALUE self)
-{
-  VALUE win = subextSubtleSingSelect(self);
+subextClientSingSelect(VALUE self) {
+    VALUE win = subextSubtleSingSelect(self);
 
-  return None != NUM2LONG(win) ? subextClientSingFind(self, win) : Qnil;
+    return None != NUM2LONG(win) ? subextClientSingFind(self, win) : Qnil;
 } /* }}} */
 
 /* subextClientSingFind {{{ */
@@ -257,11 +231,7 @@ subextClientSingSelect(VALUE self)
  */
 
 VALUE
-subextClientSingFind(VALUE self,
-  VALUE value)
-{
-  return ClientFind(value, False);
-} /* }}} */
+subextClientSingFind(VALUE self, VALUE value) { return ClientFind(value, False); } /* }}} */
 
 /* subextClientSingFirst {{{ */
 /*
@@ -296,11 +266,7 @@ subextClientSingFind(VALUE self,
  */
 
 VALUE
-subextClientSingFirst(VALUE self,
-  VALUE value)
-{
-  return ClientFind(value, True);
-} /* }}} */
+subextClientSingFirst(VALUE self, VALUE value) { return ClientFind(value, True); } /* }}} */
 
 /* subextClientSingCurrent {{{ */
 /*
@@ -313,27 +279,25 @@ subextClientSingFirst(VALUE self,
  */
 
 VALUE
-subextClientSingCurrent(VALUE self)
-{
-  VALUE client = Qnil;
-  unsigned long *focus = NULL;
+subextClientSingCurrent(VALUE self) {
+    VALUE client = Qnil;
+    unsigned long *focus = NULL;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Get current client */
-  if((focus = (unsigned long *)subSharedPropertyGet(display,
-      DefaultRootWindow(display), XA_WINDOW,
-      XInternAtom(display, "_NET_ACTIVE_WINDOW", False), NULL)))
-    {
-      /* Update client values */
-      if(RTEST(client = subextClientInstantiate(*focus)))
-        subextClientUpdate(client);
+    /* Get current client */
+    if ((focus = (unsigned long *) subSharedPropertyGet(
+                 display, DefaultRootWindow(display), XA_WINDOW,
+                 XInternAtom(display, "_NET_ACTIVE_WINDOW", False), NULL))) {
+        /* Update client values */
+        if (RTEST(client = subextClientInstantiate(*focus)))
+            subextClientUpdate(client);
 
-      free(focus);
-    }
-  else rb_raise(rb_eStandardError, "Invalid current window");
+        free(focus);
+    } else
+        rb_raise(rb_eStandardError, "Invalid current window");
 
-  return client;
+    return client;
 } /* }}} */
 
 /* subextClientSingVisible {{{ */
@@ -350,49 +314,48 @@ subextClientSingCurrent(VALUE self)
  */
 
 VALUE
-subextClientSingVisible(VALUE self)
-{
-  int i, nclients = 0;
-  Window *clients = NULL;
-  unsigned long *visible = NULL;
-  VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
+subextClientSingVisible(VALUE self) {
+    int i, nclients = 0;
+    Window *clients = NULL;
+    unsigned long *visible = NULL;
+    VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  meth    = rb_intern("new");
-  array   = rb_ary_new();
-  klass   = rb_const_get(mod, rb_intern("Client"));
-  clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
-  visible = (unsigned long *)subSharedPropertyGet(display,
-    DefaultRootWindow(display), XA_CARDINAL, XInternAtom(display,
-    "SUBTLE_VISIBLE_TAGS", False), NULL);
+    /* Fetch data */
+    meth = rb_intern("new");
+    array = rb_ary_new();
+    klass = rb_const_get(mod, rb_intern("Client"));
+    clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
+    visible = (unsigned long *) subSharedPropertyGet(
+            display, DefaultRootWindow(display), XA_CARDINAL,
+            XInternAtom(display, "SUBTLE_VISIBLE_TAGS", False), NULL);
 
-  /* Check results */
-  if(clients && visible)
-    {
-      for(i = 0; i < nclients; i++)
-        {
-          unsigned long *tags = (unsigned long *)subSharedPropertyGet(display,
-            clients[i], XA_CARDINAL, XInternAtom(display,
-            "SUBTLE_CLIENT_TAGS", False), NULL);
+    /* Check results */
+    if (clients && visible) {
+        for (i = 0; i < nclients; i++) {
+            unsigned long *tags = (unsigned long *) subSharedPropertyGet(
+                    display, clients[i], XA_CARDINAL,
+                    XInternAtom(display, "SUBTLE_CLIENT_TAGS", False), NULL);
 
-          /* Create client on match */
-          if(tags && *tags && *visible & *tags &&
-              RTEST(client = rb_funcall(klass, meth, 1, LONG2NUM(clients[i]))))
-            {
-              subextClientUpdate(client);
-              rb_ary_push(array, client);
+            /* Create client on match */
+            if (tags && *tags && *visible & *tags &&
+                RTEST(client = rb_funcall(klass, meth, 1, LONG2NUM(clients[i])))) {
+                subextClientUpdate(client);
+                rb_ary_push(array, client);
             }
 
-          if(tags) free(tags);
+            if (tags)
+                free(tags);
         }
     }
 
-  if(clients) free(clients);
-  if(visible) free(visible);
+    if (clients)
+        free(clients);
+    if (visible)
+        free(visible);
 
-  return array;
+    return array;
 } /* }}} */
 
 /* subextClientSingList {{{ */
@@ -410,37 +373,33 @@ subextClientSingVisible(VALUE self)
  */
 
 VALUE
-subextClientSingList(VALUE self)
-{
-  int i, nclients = 0;
-  Window *clients = NULL;
-  VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
+subextClientSingList(VALUE self) {
+    int i, nclients = 0;
+    Window *clients = NULL;
+    VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  meth    = rb_intern("new");
-  array   = rb_ary_new();
-  klass   = rb_const_get(mod, rb_intern("Client"));
-  clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
+    /* Fetch data */
+    meth = rb_intern("new");
+    array = rb_ary_new();
+    klass = rb_const_get(mod, rb_intern("Client"));
+    clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
 
-  /* Check results */
-  if(clients)
-    {
-      for(i = 0; i < nclients; i++)
-        {
-          /* Create client */
-          if(RTEST(client = rb_funcall(klass, meth, 1, LONG2NUM(clients[i]))))
-            {
-              subextClientUpdate(client);
-              rb_ary_push(array, client);
+    /* Check results */
+    if (clients) {
+        for (i = 0; i < nclients; i++) {
+            /* Create client */
+            if (RTEST(client = rb_funcall(klass, meth, 1, LONG2NUM(clients[i])))) {
+                subextClientUpdate(client);
+                rb_ary_push(array, client);
             }
         }
 
-      free(clients);
+        free(clients);
     }
 
-  return array;
+    return array;
 } /* }}} */
 
 /* subextClientSingRecent {{{ */
@@ -454,37 +413,33 @@ subextClientSingList(VALUE self)
  */
 
 VALUE
-subextClientSingRecent(VALUE self)
-{
-  int i, nclients = 0;
-  Window *clients = NULL;
-  VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
+subextClientSingRecent(VALUE self) {
+    int i, nclients = 0;
+    Window *clients = NULL;
+    VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  meth    = rb_intern("new");
-  array   = rb_ary_new();
-  klass   = rb_const_get(mod, rb_intern("Client"));
-  clients = subextSubtlextWindowList("_NET_ACTIVE_WINDOW", &nclients);
+    /* Fetch data */
+    meth = rb_intern("new");
+    array = rb_ary_new();
+    klass = rb_const_get(mod, rb_intern("Client"));
+    clients = subextSubtlextWindowList("_NET_ACTIVE_WINDOW", &nclients);
 
-  /* Check results */
-  if(clients)
-    {
-      for(i = 0; i < nclients; i++)
-        {
-          /* Create client */
-          if(!NIL_P(client = rb_funcall(klass, meth, 1, LONG2NUM(clients[i]))))
-            {
-              subextClientUpdate(client);
-              rb_ary_push(array, client);
+    /* Check results */
+    if (clients) {
+        for (i = 0; i < nclients; i++) {
+            /* Create client */
+            if (!NIL_P(client = rb_funcall(klass, meth, 1, LONG2NUM(clients[i])))) {
+                subextClientUpdate(client);
+                rb_ary_push(array, client);
             }
         }
 
-      free(clients);
+        free(clients);
     }
 
-  return array;
+    return array;
 } /* }}} */
 
 /* subextClientSingSpawn {{{ */
@@ -498,45 +453,39 @@ subextClientSingRecent(VALUE self)
  */
 
 VALUE
-subextClientSingSpawn(VALUE self,
-  VALUE cmd)
-{
-  VALUE ret = Qnil;
+subextClientSingSpawn(VALUE self, VALUE cmd) {
+    VALUE ret = Qnil;
 
-  /* Check object type */
-  if(T_STRING == rb_type(cmd))
-    {
-      pid_t pid = 0;
+    /* Check object type */
+    if (T_STRING == rb_type(cmd)) {
+        pid_t pid = 0;
 
-      subextSubtlextConnect(NULL); ///< Implicit open connection
+        subextSubtlextConnect(NULL); ///< Implicit open connection
 
-      /* Create client with empty window id since we cannot
-       * know the real window id at this point (race) */
-      if(0 < (pid = subSharedSpawn(RSTRING_PTR(cmd))))
-        {
-          ret = subextClientInstantiate((Window)pid);
-          rb_iv_set(ret, "@pid", INT2FIX((int)pid));
+        /* Create client with empty window id since we cannot
+         * know the real window id at this point (race) */
+        if (0 < (pid = subSharedSpawn(RSTRING_PTR(cmd)))) {
+            ret = subextClientInstantiate((Window) pid);
+            rb_iv_set(ret, "@pid", INT2FIX((int) pid));
         }
-    }
-  else rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-    rb_obj_classname(cmd));
+    } else
+        rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(cmd));
 
-  return ret;
+    return ret;
 } /* }}} */
 
 /* Helper */
 
 /* subextClientInstantiate {{{ */
 VALUE
-subextClientInstantiate(Window win)
-{
-  VALUE klass = Qnil, client = Qnil;
+subextClientInstantiate(Window win) {
+    VALUE klass = Qnil, client = Qnil;
 
-  /* Create new instance */
-  klass  = rb_const_get(mod, rb_intern("Client"));
-  client = rb_funcall(klass, rb_intern("new"), 1, LONG2NUM(win));
+    /* Create new instance */
+    klass = rb_const_get(mod, rb_intern("Client"));
+    client = rb_funcall(klass, rb_intern("new"), 1, LONG2NUM(win));
 
-  return client;
+    return client;
 } /* }}} */
 
 /* Class */
@@ -554,28 +503,25 @@ subextClientInstantiate(Window win)
  */
 
 VALUE
-subextClientInit(VALUE self,
-  VALUE win)
-{
-  if(!FIXNUM_P(win))
-    rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-      rb_obj_classname(win));
+subextClientInit(VALUE self, VALUE win) {
+    if (!FIXNUM_P(win))
+        rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(win));
 
-  /* Init object */
-  rb_iv_set(self, "@win",      win);
-  rb_iv_set(self, "@name",     Qnil);
-  rb_iv_set(self, "@instance", Qnil);
-  rb_iv_set(self, "@klass",    Qnil);
-  rb_iv_set(self, "@role",     Qnil);
-  rb_iv_set(self, "@geometry", Qnil);
-  rb_iv_set(self, "@gravity",  Qnil);
-  rb_iv_set(self, "@screen",   Qnil);
-  rb_iv_set(self, "@flags",    Qnil);
-  rb_iv_set(self, "@tags",     INT2FIX(0));
+    /* Init object */
+    rb_iv_set(self, "@win", win);
+    rb_iv_set(self, "@name", Qnil);
+    rb_iv_set(self, "@instance", Qnil);
+    rb_iv_set(self, "@klass", Qnil);
+    rb_iv_set(self, "@role", Qnil);
+    rb_iv_set(self, "@geometry", Qnil);
+    rb_iv_set(self, "@gravity", Qnil);
+    rb_iv_set(self, "@screen", Qnil);
+    rb_iv_set(self, "@flags", Qnil);
+    rb_iv_set(self, "@tags", INT2FIX(0));
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextClientUpdate {{{ */
@@ -589,53 +535,55 @@ subextClientInit(VALUE self,
  */
 
 VALUE
-subextClientUpdate(VALUE self)
-{
-  Window win = None;
+subextClientUpdate(VALUE self) {
+    Window win = None;
 
-  rb_check_frozen(self);
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    rb_check_frozen(self);
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Check values */
-  if(0 <= (win = NUM2LONG(rb_iv_get(self, "@win"))))
-    {
-      int *tags = NULL, *flags = NULL;
-      char *wmname = NULL, *wminstance = NULL, *wmclass = NULL, *role = NULL;
+    /* Check values */
+    if (0 <= (win = NUM2LONG(rb_iv_get(self, "@win")))) {
+        int *tags = NULL, *flags = NULL;
+        char *wmname = NULL, *wminstance = NULL, *wmclass = NULL, *role = NULL;
 
-      /* Fetch name, instance and class */
-      subSharedPropertyClass(display, win, &wminstance, &wmclass);
-      subSharedPropertyName(display, win, &wmname, wmclass);
+        /* Fetch name, instance and class */
+        subSharedPropertyClass(display, win, &wminstance, &wmclass);
+        subSharedPropertyName(display, win, &wmname, wmclass);
 
-      /* Fetch tags, flags and role */
-      tags  = (int *)subSharedPropertyGet(display, win, XA_CARDINAL,
-        XInternAtom(display, "SUBTLE_CLIENT_TAGS", False), NULL);
-      flags = (int *)subSharedPropertyGet(display, win, XA_CARDINAL,
-        XInternAtom(display, "SUBTLE_CLIENT_FLAGS", False), NULL);
-      role  = subSharedPropertyGet(display, win, XA_STRING,
-        XInternAtom(display, "WM_WINDOW_ROLE", False), NULL);
+        /* Fetch tags, flags and role */
+        tags = (int *) subSharedPropertyGet(
+                display, win, XA_CARDINAL, XInternAtom(display, "SUBTLE_CLIENT_TAGS", False), NULL);
+        flags = (int *) subSharedPropertyGet(display, win, XA_CARDINAL,
+                                             XInternAtom(display, "SUBTLE_CLIENT_FLAGS", False),
+                                             NULL);
+        role = subSharedPropertyGet(display, win, XA_STRING,
+                                    XInternAtom(display, "WM_WINDOW_ROLE", False), NULL);
 
-      /* Set properties */
-      rb_iv_set(self, "@tags",     tags  ? INT2FIX(*tags)  : INT2FIX(0));
-      rb_iv_set(self, "@flags",    flags ? INT2FIX(*flags) : INT2FIX(0));
-      rb_iv_set(self, "@name",     rb_str_new2(wmname));
-      rb_iv_set(self, "@instance", rb_str_new2(wminstance));
-      rb_iv_set(self, "@klass",    rb_str_new2(wmclass));
-      rb_iv_set(self, "@role",     role ? rb_str_new2(role) : Qnil);
+        /* Set properties */
+        rb_iv_set(self, "@tags", tags ? INT2FIX(*tags) : INT2FIX(0));
+        rb_iv_set(self, "@flags", flags ? INT2FIX(*flags) : INT2FIX(0));
+        rb_iv_set(self, "@name", rb_str_new2(wmname));
+        rb_iv_set(self, "@instance", rb_str_new2(wminstance));
+        rb_iv_set(self, "@klass", rb_str_new2(wmclass));
+        rb_iv_set(self, "@role", role ? rb_str_new2(role) : Qnil);
 
-      /* Set to nil for on demand loading */
-      rb_iv_set(self, "@geometry", Qnil);
-      rb_iv_set(self, "@gravity",  Qnil);
+        /* Set to nil for on demand loading */
+        rb_iv_set(self, "@geometry", Qnil);
+        rb_iv_set(self, "@gravity", Qnil);
 
-      if(tags)  free(tags);
-      if(flags) free(flags);
-      if(role)  free(role);
-      free(wmname);
-      free(wminstance);
-      free(wmclass);
-    }
-  else rb_raise(rb_eStandardError, "Invalid client id `%#lx'", win);
+        if (tags)
+            free(tags);
+        if (flags)
+            free(flags);
+        if (role)
+            free(role);
+        free(wmname);
+        free(wminstance);
+        free(wmclass);
+    } else
+        rb_raise(rb_eStandardError, "Invalid client id `%#lx'", win);
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextClientViewList {{{ */
@@ -652,58 +600,58 @@ subextClientUpdate(VALUE self)
  */
 
 VALUE
-subextClientViewList(VALUE self)
-{
-  int i, nnames = 0;
-  char **names = NULL;
-  VALUE win = Qnil, array = Qnil, method = Qnil, klass = Qnil;
-  unsigned long *view_tags = NULL, *client_tags = NULL, *flags = NULL;
+subextClientViewList(VALUE self) {
+    int i, nnames = 0;
+    char **names = NULL;
+    VALUE win = Qnil, array = Qnil, method = Qnil, klass = Qnil;
+    unsigned long *view_tags = NULL, *client_tags = NULL, *flags = NULL;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  method  = rb_intern("new");
-  klass   = rb_const_get(mod, rb_intern("View"));
-  array   = rb_ary_new();
-  names   = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
-    XInternAtom(display, "_NET_DESKTOP_NAMES", False), &nnames);
-  view_tags   = (unsigned long *)subSharedPropertyGet(display,
-    DefaultRootWindow(display), XA_CARDINAL, XInternAtom(display,
-    "SUBTLE_VIEW_TAGS", False), NULL);
-  client_tags = (unsigned long *)subSharedPropertyGet(display, NUM2LONG(win),
-    XA_CARDINAL, XInternAtom(display, "SUBTLE_CLIENT_TAGS", False), NULL);
-  flags       = (unsigned long *)subSharedPropertyGet(display, NUM2LONG(win),
-    XA_CARDINAL, XInternAtom(display, "SUBTLE_CLIENT_FLAGS", False), NULL);
+    /* Fetch data */
+    method = rb_intern("new");
+    klass = rb_const_get(mod, rb_intern("View"));
+    array = rb_ary_new();
+    names = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
+                                        XInternAtom(display, "_NET_DESKTOP_NAMES", False), &nnames);
+    view_tags = (unsigned long *) subSharedPropertyGet(
+            display, DefaultRootWindow(display), XA_CARDINAL,
+            XInternAtom(display, "SUBTLE_VIEW_TAGS", False), NULL);
+    client_tags = (unsigned long *) subSharedPropertyGet(
+            display, NUM2LONG(win), XA_CARDINAL, XInternAtom(display, "SUBTLE_CLIENT_TAGS", False),
+            NULL);
+    flags = (unsigned long *) subSharedPropertyGet(
+            display, NUM2LONG(win), XA_CARDINAL, XInternAtom(display, "SUBTLE_CLIENT_FLAGS", False),
+            NULL);
 
-  /* Check results */
-  if(names && view_tags && client_tags)
-    {
-      for(i = 0; i < nnames; i++)
-        {
-          /* Check if there are common tags or window is stick */
-          if((view_tags[i] & *client_tags) ||
-              (flags && *flags & SUB_EWMH_STICK))
-            {
-              /* Create new view */
-              VALUE v = rb_funcall(klass, method, 1, rb_str_new2(names[i]));
+    /* Check results */
+    if (names && view_tags && client_tags) {
+        for (i = 0; i < nnames; i++) {
+            /* Check if there are common tags or window is stick */
+            if ((view_tags[i] & *client_tags) || (flags && *flags & SUB_EWMH_STICK)) {
+                /* Create new view */
+                VALUE v = rb_funcall(klass, method, 1, rb_str_new2(names[i]));
 
-              rb_iv_set(v, "@id", INT2FIX(i));
-              rb_ary_push(array, v);
+                rb_iv_set(v, "@id", INT2FIX(i));
+                rb_ary_push(array, v);
             }
         }
-
     }
 
-  if(names)       XFreeStringList(names);
-  if(view_tags)   free(view_tags);
-  if(client_tags) free(client_tags);
-  if(flags)       free(flags);
+    if (names)
+        XFreeStringList(names);
+    if (view_tags)
+        free(view_tags);
+    if (client_tags)
+        free(client_tags);
+    if (flags)
+        free(flags);
 
-  return array;
+    return array;
 } /* }}} */
 
 /* subextClientFlagsAskFull {{{ */
@@ -720,10 +668,7 @@ subextClientViewList(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskFull(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_FULL);
-} /* }}} */
+subextClientFlagsAskFull(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FULL); } /* }}} */
 
 /* subextClientFlagsAskFloat {{{ */
 /*
@@ -739,10 +684,7 @@ subextClientFlagsAskFull(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskFloat(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_FLOAT);
-} /* }}} */
+subextClientFlagsAskFloat(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FLOAT); } /* }}} */
 
 /* subextClientFlagsAskStick {{{ */
 /*
@@ -758,10 +700,7 @@ subextClientFlagsAskFloat(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskStick(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_STICK);
-} /* }}} */
+subextClientFlagsAskStick(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_STICK); } /* }}} */
 
 /* subextClientFlagsAskResize {{{ */
 /*
@@ -777,10 +716,7 @@ subextClientFlagsAskStick(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskResize(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_RESIZE);
-} /* }}} */
+subextClientFlagsAskResize(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_RESIZE); } /* }}} */
 
 /* subextClientFlagsAskUrgent {{{ */
 /*
@@ -796,10 +732,7 @@ subextClientFlagsAskResize(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskUrgent(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_URGENT);
-} /* }}} */
+subextClientFlagsAskUrgent(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_URGENT); } /* }}} */
 
 /* subextClientFlagsAskZaphod {{{ */
 /*
@@ -815,10 +748,7 @@ subextClientFlagsAskUrgent(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskZaphod(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_ZAPHOD);
-} /* }}} */
+subextClientFlagsAskZaphod(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_ZAPHOD); } /* }}} */
 
 /* subextClientFlagsAskFixed {{{ */
 /*
@@ -834,10 +764,7 @@ subextClientFlagsAskZaphod(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskFixed(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_FIXED);
-} /* }}} */
+subextClientFlagsAskFixed(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FIXED); } /* }}} */
 
 /* subextClientFlagsAskBorderless {{{ */
 /*
@@ -853,9 +780,8 @@ subextClientFlagsAskFixed(VALUE self)
  */
 
 VALUE
-subextClientFlagsAskBorderless(VALUE self)
-{
-  return ClientFlagsGet(self, SUB_EWMH_BORDERLESS);
+subextClientFlagsAskBorderless(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_BORDERLESS);
 } /* }}} */
 
 /* subextClientFlagsToggleFull {{{ */
@@ -869,9 +795,8 @@ subextClientFlagsAskBorderless(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleFull(VALUE self)
-{
-  return ClientFlagsToggle(self, "_NET_WM_STATE_FULLSCREEN", SUB_EWMH_FULL);
+subextClientFlagsToggleFull(VALUE self) {
+    return ClientFlagsToggle(self, "_NET_WM_STATE_FULLSCREEN", SUB_EWMH_FULL);
 } /* }}} */
 
 /* subextClientFlagsToggleFloat {{{ */
@@ -885,9 +810,8 @@ subextClientFlagsToggleFull(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleFloat(VALUE self)
-{
-  return ClientFlagsToggle(self, "_NET_WM_STATE_ABOVE", SUB_EWMH_FLOAT);
+subextClientFlagsToggleFloat(VALUE self) {
+    return ClientFlagsToggle(self, "_NET_WM_STATE_ABOVE", SUB_EWMH_FLOAT);
 } /* }}} */
 
 /* subextClientFlagsToggleStick {{{ */
@@ -901,9 +825,8 @@ subextClientFlagsToggleFloat(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleStick(VALUE self)
-{
-  return ClientFlagsToggle(self, "_NET_WM_STATE_STICKY", SUB_EWMH_STICK);
+subextClientFlagsToggleStick(VALUE self) {
+    return ClientFlagsToggle(self, "_NET_WM_STATE_STICKY", SUB_EWMH_STICK);
 } /* }}} */
 
 /* subextClientFlagsToggleResize {{{ */
@@ -917,9 +840,8 @@ subextClientFlagsToggleStick(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleResize(VALUE self)
-{
-  return ClientFlagsSet(self, SUB_EWMH_RESIZE, True);
+subextClientFlagsToggleResize(VALUE self) {
+    return ClientFlagsSet(self, SUB_EWMH_RESIZE, True);
 } /* }}} */
 
 /* subextClientFlagsToggleUrgent {{{ */
@@ -933,9 +855,8 @@ subextClientFlagsToggleResize(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleUrgent(VALUE self)
-{
-  return ClientFlagsSet(self, SUB_EWMH_URGENT, True);
+subextClientFlagsToggleUrgent(VALUE self) {
+    return ClientFlagsSet(self, SUB_EWMH_URGENT, True);
 } /* }}} */
 
 /* subextClientFlagsToggleZaphod {{{ */
@@ -949,9 +870,8 @@ subextClientFlagsToggleUrgent(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleZaphod(VALUE self)
-{
-  return ClientFlagsSet(self, SUB_EWMH_ZAPHOD, True);
+subextClientFlagsToggleZaphod(VALUE self) {
+    return ClientFlagsSet(self, SUB_EWMH_ZAPHOD, True);
 } /* }}} */
 
 /* subextClientFlagsToggleFixed {{{ */
@@ -965,9 +885,8 @@ subextClientFlagsToggleZaphod(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleFixed(VALUE self)
-{
-  return ClientFlagsSet(self, SUB_EWMH_FIXED, True);
+subextClientFlagsToggleFixed(VALUE self) {
+    return ClientFlagsSet(self, SUB_EWMH_FIXED, True);
 } /* }}} */
 
 /* subextClientFlagsToggleBorderless {{{ */
@@ -981,9 +900,8 @@ subextClientFlagsToggleFixed(VALUE self)
  */
 
 VALUE
-subextClientFlagsToggleBorderless(VALUE self)
-{
-  return ClientFlagsSet(self, SUB_EWMH_BORDERLESS, True);
+subextClientFlagsToggleBorderless(VALUE self) {
+    return ClientFlagsSet(self, SUB_EWMH_BORDERLESS, True);
 } /* }}} */
 
 /* subextClientFlagsWriter {{{ */
@@ -1007,32 +925,36 @@ subextClientFlagsToggleBorderless(VALUE self)
  */
 
 VALUE
-subextClientFlagsWriter(VALUE self,
-  VALUE value)
-{
-  /* Check object type */
-  if(T_ARRAY == rb_type(value))
-    {
-      int i, flags = 0;
-      VALUE entry = Qnil;
+subextClientFlagsWriter(VALUE self, VALUE value) {
+    /* Check object type */
+    if (T_ARRAY == rb_type(value)) {
+        int i, flags = 0;
+        VALUE entry = Qnil;
 
-      /* Translate flags */
-      for(i = 0; Qnil != (entry = rb_ary_entry(value, i)); ++i)
-        {
-          if(CHAR2SYM("full")            == entry) flags |= SUB_EWMH_FULL;
-          else if(CHAR2SYM("float")      == entry) flags |= SUB_EWMH_FLOAT;
-          else if(CHAR2SYM("stick")      == entry) flags |= SUB_EWMH_STICK;
-          else if(CHAR2SYM("resize")     == entry) flags |= SUB_EWMH_RESIZE;
-          else if(CHAR2SYM("urgent")     == entry) flags |= SUB_EWMH_URGENT;
-          else if(CHAR2SYM("zaphod")     == entry) flags |= SUB_EWMH_ZAPHOD;
-          else if(CHAR2SYM("fixed")      == entry) flags |= SUB_EWMH_FIXED;
-          else if(CHAR2SYM("borderless") == entry) flags |= SUB_EWMH_BORDERLESS;
+        /* Translate flags */
+        for (i = 0; Qnil != (entry = rb_ary_entry(value, i)); ++i) {
+            if (CHAR2SYM("full") == entry)
+                flags |= SUB_EWMH_FULL;
+            else if (CHAR2SYM("float") == entry)
+                flags |= SUB_EWMH_FLOAT;
+            else if (CHAR2SYM("stick") == entry)
+                flags |= SUB_EWMH_STICK;
+            else if (CHAR2SYM("resize") == entry)
+                flags |= SUB_EWMH_RESIZE;
+            else if (CHAR2SYM("urgent") == entry)
+                flags |= SUB_EWMH_URGENT;
+            else if (CHAR2SYM("zaphod") == entry)
+                flags |= SUB_EWMH_ZAPHOD;
+            else if (CHAR2SYM("fixed") == entry)
+                flags |= SUB_EWMH_FIXED;
+            else if (CHAR2SYM("borderless") == entry)
+                flags |= SUB_EWMH_BORDERLESS;
         }
 
-      ClientFlagsSet(self, flags, False);
+        ClientFlagsSet(self, flags, False);
     }
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextClientRestackRaise {{{ */
@@ -1046,10 +968,7 @@ subextClientFlagsWriter(VALUE self,
  */
 
 VALUE
-subextClientRestackRaise(VALUE self)
-{
-  return ClientRestack(self, Above);
-} /* }}} */
+subextClientRestackRaise(VALUE self) { return ClientRestack(self, Above); } /* }}} */
 
 /* subextClientRestackLower {{{ */
 /*
@@ -1062,10 +981,7 @@ subextClientRestackRaise(VALUE self)
  */
 
 VALUE
-subextClientRestackLower(VALUE self)
-{
-  return ClientRestack(self, Below);
-} /* }}} */
+subextClientRestackLower(VALUE self) { return ClientRestack(self, Below); } /* }}} */
 
 /* subextClientAskAlive {{{ */
 /*
@@ -1081,23 +997,23 @@ subextClientRestackLower(VALUE self)
  */
 
 VALUE
-subextClientAskAlive(VALUE self)
-{
-  VALUE ret = Qfalse, win = Qnil;
-  XWindowAttributes attrs;
+subextClientAskAlive(VALUE self) {
+    VALUE ret = Qfalse, win = Qnil;
+    XWindowAttributes attrs;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch client attributes */
-  if(!XGetWindowAttributes(display, NUM2LONG(win), &attrs))
-    rb_obj_freeze(self);
-  else ret = Qtrue;
+    /* Fetch client attributes */
+    if (!XGetWindowAttributes(display, NUM2LONG(win), &attrs))
+        rb_obj_freeze(self);
+    else
+        ret = Qtrue;
 
-  return ret;
+    return ret;
 } /* }}} */
 
 /* subextClientGravityReader {{{ */
@@ -1111,39 +1027,37 @@ subextClientAskAlive(VALUE self)
  */
 
 VALUE
-subextClientGravityReader(VALUE self)
-{
-  VALUE win = Qnil, gravity = Qnil;
+subextClientGravityReader(VALUE self) {
+    VALUE win = Qnil, gravity = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Load on demand */
-  if(NIL_P((gravity = rb_iv_get(self, "@gravity"))))
-    {
-      int *id = NULL;
-      char buf[5] = { 0 };
+    /* Load on demand */
+    if (NIL_P((gravity = rb_iv_get(self, "@gravity")))) {
+        int *id = NULL;
+        char buf[5] = {0};
 
-      /* Get gravity */
-      if((id = (int *)subSharedPropertyGet(display, NUM2LONG(win), XA_CARDINAL,
-          XInternAtom(display, "SUBTLE_CLIENT_GRAVITY", False), NULL)))
-        {
-          /* Create gravity */
-          snprintf(buf, sizeof(buf), "%d", *id);
-          gravity = subextGravityInstantiate(buf);
+        /* Get gravity */
+        if ((id = (int *) subSharedPropertyGet(display, NUM2LONG(win), XA_CARDINAL,
+                                               XInternAtom(display, "SUBTLE_CLIENT_GRAVITY", False),
+                                               NULL))) {
+            /* Create gravity */
+            snprintf(buf, sizeof(buf), "%d", *id);
+            gravity = subextGravityInstantiate(buf);
 
-          subextGravitySave(gravity);
+            subextGravitySave(gravity);
 
-          rb_iv_set(self, "@gravity", gravity);
+            rb_iv_set(self, "@gravity", gravity);
 
-          free(id);
+            free(id);
         }
     }
 
-  return gravity;
+    return gravity;
 } /* }}} */
 
 /* subextClientGravityWriter {{{ */
@@ -1171,36 +1085,34 @@ subextClientGravityReader(VALUE self)
  */
 
 VALUE
-subextClientGravityWriter(VALUE self,
-  VALUE value)
-{
-  /* Check ruby object */
-  rb_check_frozen(self);
+subextClientGravityWriter(VALUE self, VALUE value) {
+    /* Check ruby object */
+    rb_check_frozen(self);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Check value type */
-  switch(rb_type(value))
-    {
-      case T_FIXNUM:
-      case T_SYMBOL:
-      case T_STRING: ClientGravity(Qnil, value, self); break;
-      case T_OBJECT:
-        if(rb_obj_is_instance_of(value,
-            rb_const_get(mod, rb_intern("Gravity"))))
-          ClientGravity(Qnil, value, self);
-        break;
-      case T_HASH:
-        rb_hash_foreach(value, ClientGravity, self);
-        break;
-      default: rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-        rb_obj_classname(value));
+    /* Check value type */
+    switch (rb_type(value)) {
+        case T_FIXNUM:
+        case T_SYMBOL:
+        case T_STRING:
+            ClientGravity(Qnil, value, self);
+            break;
+        case T_OBJECT:
+            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Gravity"))))
+                ClientGravity(Qnil, value, self);
+            break;
+        case T_HASH:
+            rb_hash_foreach(value, ClientGravity, self);
+            break;
+        default:
+            rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(value));
     }
 
-  /* Reset gravity */
-  rb_iv_set(self, "@gravity", Qnil);
+    /* Reset gravity */
+    rb_iv_set(self, "@gravity", Qnil);
 
-  return value;
+    return value;
 } /* }}} */
 
 /* subextClientGeometryReader {{{ */
@@ -1214,30 +1126,27 @@ subextClientGravityWriter(VALUE self,
  */
 
 VALUE
-subextClientGeometryReader(VALUE self)
-{
-  VALUE win = Qnil, geom = Qnil;
+subextClientGeometryReader(VALUE self) {
+    VALUE win = Qnil, geom = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Load on demand */
-  if(NIL_P((geom = rb_iv_get(self, "@geometry"))))
-    {
-      XRectangle geometry = { 0 };
+    /* Load on demand */
+    if (NIL_P((geom = rb_iv_get(self, "@geometry")))) {
+        XRectangle geometry = {0};
 
-      subSharedPropertyGeometry(display, NUM2LONG(win), &geometry);
+        subSharedPropertyGeometry(display, NUM2LONG(win), &geometry);
 
-      geom = subextGeometryInstantiate(geometry.x, geometry.y,
-        geometry.width, geometry.height);
+        geom = subextGeometryInstantiate(geometry.x, geometry.y, geometry.width, geometry.height);
 
-      rb_iv_set(self, "@geometry", geom);
+        rb_iv_set(self, "@geometry", geom);
     }
 
-  return geom;
+    return geom;
 } /* }}} */
 
 /* subextClientGeometryWriter {{{ */
@@ -1267,40 +1176,35 @@ subextClientGeometryReader(VALUE self)
  */
 
 VALUE
-subextClientGeometryWriter(int argc,
-  VALUE *argv,
-  VALUE self)
-{
-  VALUE klass = Qnil, geom = Qnil;
+subextClientGeometryWriter(int argc, VALUE *argv, VALUE self) {
+    VALUE klass = Qnil, geom = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    /* Check ruby object */
+    rb_check_frozen(self);
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Delegate arguments */
-  klass = rb_const_get(mod, rb_intern("Geometry"));
-  geom  = rb_funcall2(klass, rb_intern("new"), argc, argv);
+    /* Delegate arguments */
+    klass = rb_const_get(mod, rb_intern("Geometry"));
+    geom = rb_funcall2(klass, rb_intern("new"), argc, argv);
 
-  /* Update geometry */
-  if(RTEST(geom))
-    {
-      VALUE win = Qnil;
-      SubMessageData data = { { 0, 0, 0, 0, 0 } };
+    /* Update geometry */
+    if (RTEST(geom)) {
+        VALUE win = Qnil;
+        SubMessageData data = {{0, 0, 0, 0, 0}};
 
-      GET_ATTR(self, "@win", win);
+        GET_ATTR(self, "@win", win);
 
-      data.l[1] = FIX2INT(rb_iv_get(geom,  "@x"));
-      data.l[2] = FIX2INT(rb_iv_get(geom,  "@y"));
-      data.l[3] = FIX2INT(rb_iv_get(geom,  "@width"));
-      data.l[4] = FIX2INT(rb_iv_get(geom,  "@height"));
+        data.l[1] = FIX2INT(rb_iv_get(geom, "@x"));
+        data.l[2] = FIX2INT(rb_iv_get(geom, "@y"));
+        data.l[3] = FIX2INT(rb_iv_get(geom, "@width"));
+        data.l[4] = FIX2INT(rb_iv_get(geom, "@height"));
 
-      subSharedMessage(display, NUM2LONG(win),
-        "_NET_MOVERESIZE_WINDOW", data, 32, True);
+        subSharedMessage(display, NUM2LONG(win), "_NET_MOVERESIZE_WINDOW", data, 32, True);
 
-      rb_iv_set(self, "@geometry", geom);
+        rb_iv_set(self, "@geometry", geom);
     }
 
-  return geom;
+    return geom;
 } /* }}} */
 
 /* subextClientScreenReader {{{ */
@@ -1314,25 +1218,24 @@ subextClientGeometryWriter(int argc,
  */
 
 VALUE
-subextClientScreenReader(VALUE self)
-{
-  VALUE screen = Qnil, win = Qnil;
-  int *id = NULL;
+subextClientScreenReader(VALUE self) {
+    VALUE screen = Qnil, win = Qnil;
+    int *id = NULL;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  /* Get screen */
-  if((id = (int *)subSharedPropertyGet(display, NUM2LONG(win), XA_CARDINAL,
-      XInternAtom(display, "SUBTLE_CLIENT_SCREEN", False), NULL)))
-    {
-      screen = subextScreenSingFind(self, INT2FIX(*id));
+    /* Get screen */
+    if ((id = (int *) subSharedPropertyGet(display, NUM2LONG(win), XA_CARDINAL,
+                                           XInternAtom(display, "SUBTLE_CLIENT_SCREEN", False),
+                                           NULL))) {
+        screen = subextScreenSingFind(self, INT2FIX(*id));
 
-      free(id);
+        free(id);
     }
 
-  return screen;
+    return screen;
 } /* }}} */
 
 /* subextClientToString {{{ */
@@ -1346,14 +1249,13 @@ subextClientScreenReader(VALUE self)
  */
 
 VALUE
-subextClientToString(VALUE self)
-{
-  VALUE name = Qnil;
+subextClientToString(VALUE self) {
+    VALUE name = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@name", name);
+    /* Check ruby object */
+    GET_ATTR(self, "@name", name);
 
-  return name;
+    return name;
 } /* }}} */
 
 /* subextClientKill {{{ */
@@ -1367,27 +1269,25 @@ subextClientToString(VALUE self)
  */
 
 VALUE
-subextClientKill(VALUE self)
-{
-  VALUE win = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+subextClientKill(VALUE self) {
+    VALUE win = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Send message */
-  data.l[0] = CurrentTime;
-  data.l[1] = 2; ///< Claim to be a pager
+    /* Send message */
+    data.l[0] = CurrentTime;
+    data.l[1] = 2; ///< Claim to be a pager
 
-  subSharedMessage(display, NUM2LONG(win),
-    "_NET_CLOSE_WINDOW", data, 32, True);
+    subSharedMessage(display, NUM2LONG(win), "_NET_CLOSE_WINDOW", data, 32, True);
 
-  rb_obj_freeze(self);
+    rb_obj_freeze(self);
 
-  return Qnil;
+    return Qnil;
 } /* }}} */
 
 // vim:ts=2:bs=2:sw=2:et:fdm=marker
