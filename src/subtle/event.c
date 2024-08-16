@@ -1012,7 +1012,7 @@ static void EventMessage(XClientMessageEvent *ev) {
                 } else EventQueuePush(ev, SUB_TYPE_CLIENT);
                 break; /* }}} */
             case SUB_EWMH_SUBTLE_GRAVITY_NEW: /* {{{ */
-                if (ev->data.b) {
+                {
                     XRectangle geom = {0};
                     char buf[30] = {0};
 
@@ -1094,7 +1094,7 @@ static void EventMessage(XClientMessageEvent *ev) {
                 }
                 break; /* }}} */
             case SUB_EWMH_SUBTLE_SUBLET_STYLE: /* {{{ */
-                if (ev->data.b) {
+                {
                     int subletid = 0;
                     char name[30] = {0};
 
@@ -1140,7 +1140,7 @@ static void EventMessage(XClientMessageEvent *ev) {
                 }
                 break; /* }}} */
             case SUB_EWMH_SUBTLE_TAG_NEW: /* {{{ */
-                if (ev->data.b) {
+                {
                     int duplicate = False;
 
                     if ((t = subTagNew(ev->data.b, &duplicate)) && !duplicate) {
@@ -1181,7 +1181,7 @@ static void EventMessage(XClientMessageEvent *ev) {
                 }
                 break; /* }}} */
             case SUB_EWMH_SUBTLE_VIEW_NEW: /* {{{ */
-                if (ev->data.b && (v = subViewNew(ev->data.b, NULL))) {
+                if ((v = subViewNew(ev->data.b, NULL))) {
                     subArrayPush(subtle->views, (void *) v);
                     subClientDimension(-1); ///< Grow
                     subViewPublish();
@@ -1208,7 +1208,7 @@ static void EventMessage(XClientMessageEvent *ev) {
                     EventQueuePush(ev, SUB_TYPE_VIEW);
                 break; /* }}} */
             case SUB_EWMH_SUBTLE_VIEW_STYLE: /* {{{ */
-                if (ev->data.b) {
+                {
                     int view_id = 0;
                     char name[30] = {0};
 
