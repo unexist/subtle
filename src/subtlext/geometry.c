@@ -1,69 +1,56 @@
 
- /**
-  * @package subtlext
-  *
-  * @file Geometry functions
-  * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
-  * @version $Id$
-  *
-  * This program can be distributed under the terms of the GNU GPLv2.
-  * See the file COPYING for details.
-  **/
+/**
+ * @package subtlext
+ *
+ * @file Geometry functions
+ * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPLv2.
+ * See the file COPYING for details.
+ **/
 
 #include "subtlext.h"
 
 /* GeometryEqual {{{ */
-VALUE
-GeometryEqual(VALUE self,
-  VALUE other)
-{
-  int ret = False;
+VALUE GeometryEqual(VALUE self, VALUE other) {
+    int ret = False;
 
-  /* Check ruby object types */
-  if(rb_obj_class(self) == rb_obj_class(other))
-    {
-      XRectangle r1 = { 0 }, r2 = { 0 };
+    /* Check ruby object types */
+    if (rb_obj_class(self) == rb_obj_class(other)) {
+        XRectangle r1 = {0}, r2 = {0};
 
-      /* Get rectangles */
-      subextGeometryToRect(self,  &r1);
-      subextGeometryToRect(other, &r2);
+        /* Get rectangles */
+        subextGeometryToRect(self, &r1);
+        subextGeometryToRect(other, &r2);
 
-      ret = (r1.x == r2.x && r1.y == r2.y &&
-        r1.width == r2.width && r1.height == r2.height);
+        ret = (r1.x == r2.x && r1.y == r2.y && r1.width == r2.width && r1.height == r2.height);
     }
 
-  return ret ? Qtrue : Qfalse;
+    return ret ? Qtrue : Qfalse;
 } /* }}} */
 
 /* Helper */
 
 /* subextGeometryInstantiate {{{ */
-VALUE
-subextGeometryInstantiate(int x,
-  int y,
-  int width,
-  int height)
-{
-  VALUE klass = Qnil, geometry = Qnil;
+VALUE subextGeometryInstantiate(int x, int y, int width, int height) {
+    VALUE klass = Qnil, geometry = Qnil;
 
-  /* Create new instance */
-  klass    = rb_const_get(mod, rb_intern("Geometry"));
-  geometry = rb_funcall(klass, rb_intern("new"), 4,
-    INT2FIX(x), INT2FIX(y), INT2FIX(width), INT2FIX(height));
+    /* Create new instance */
+    klass = rb_const_get(mod, rb_intern("Geometry"));
+    geometry = rb_funcall(klass, rb_intern("new"), 4, INT2FIX(x), INT2FIX(y), INT2FIX(width),
+                          INT2FIX(height));
 
-  return geometry;
+    return geometry;
 } /* }}} */
 
 /* subextGeometryToRect {{{ */
-void
-subextGeometryToRect(VALUE self,
-  XRectangle *r)
-{
-  /* Set values */
-  r->x      = FIX2INT(rb_iv_get(self, "@x"));
-  r->y      = FIX2INT(rb_iv_get(self, "@y"));
-  r->width  = FIX2INT(rb_iv_get(self, "@width"));
-  r->height = FIX2INT(rb_iv_get(self, "@height"));
+void subextGeometryToRect(VALUE self, XRectangle *r) {
+    /* Set values */
+    r->x = FIX2INT(rb_iv_get(self, "@x"));
+    r->y = FIX2INT(rb_iv_get(self, "@y"));
+    r->width = FIX2INT(rb_iv_get(self, "@width"));
+    r->height = FIX2INT(rb_iv_get(self, "@height"));
 } /* }}} */
 
 /* Class */
@@ -105,82 +92,72 @@ subextGeometryToRect(VALUE self,
  *  => #<Subtlext::Geometry:xxx>
  */
 
-VALUE
-subextGeometryInit(int argc,
-  VALUE *argv,
-  VALUE self)
-{
-  VALUE value = Qnil, data[4] = { Qnil };
+VALUE subextGeometryInit(int argc, VALUE *argv, VALUE self) {
+    VALUE value = Qnil, data[4] = {Qnil};
 
-  rb_scan_args(argc, argv, "13", &data[0], &data[1], &data[2], &data[3]);
-  value = data[0];
+    rb_scan_args(argc, argv, "13", &data[0], &data[1], &data[2], &data[3]);
+    value = data[0];
 
-  /* Check object type */
-  switch(rb_type(value))
-    {
-      case T_FIXNUM: break;
-      case T_ARRAY:
-        if(4 == FIX2INT(rb_funcall(value, rb_intern("size"), 0, NULL)))
-          {
+    /* Check object type */
+    switch (rb_type(value)) {
+        case T_FIXNUM:
+            break;
+        case T_ARRAY:
+            if (4 == FIX2INT(rb_funcall(value, rb_intern("size"), 0, NULL))) {
+                int i;
+
+                for (i = 0; 4 > i; i++) {
+                    data[i] = rb_ary_entry(value, i);
+                }
+            }
+            break;
+        case T_HASH: {
             int i;
+            const char *syms[] = {"x", "y", "width", "height"};
 
-            for(i = 0; 4 > i; i++)
-              data[i] = rb_ary_entry(value, i);
-          }
-        break;
-      case T_HASH:
-          {
-            int i;
-            const char *syms[] = { "x", "y", "width", "height" };
+            for (i = 0; 4 > i; i++) {
+                data[i] = rb_hash_lookup(value, CHAR2SYM(syms[i]));
+            }
+        } break;
+        case T_STRING: {
+            XRectangle geom = {0};
 
-            for(i = 0; 4 > i; i++)
-              data[i] = rb_hash_lookup(value, CHAR2SYM(syms[i]));
-          }
-        break;
-      case T_STRING:
-          {
-            XRectangle geom = { 0 };
-
-            sscanf(RSTRING_PTR(value), "%hdx%hd+%hu+%hu",
-              &geom.x, &geom.y, &geom.width, &geom.height);
+            sscanf(RSTRING_PTR(value), "%hdx%hd+%hu+%hu", &geom.x, &geom.y, &geom.width,
+                   &geom.height);
 
             /* Convert values */
             data[0] = INT2FIX(geom.x);
             data[1] = INT2FIX(geom.y);
             data[2] = INT2FIX(geom.width);
             data[3] = INT2FIX(geom.height);
-          }
-        break;
-      case T_OBJECT:
-          {
+        } break;
+        case T_OBJECT: {
             VALUE klass = rb_const_get(mod, rb_intern("Geometry"));
 
             /* Check object instance */
-            if(rb_obj_is_instance_of(value, klass))
-              {
+            if (rb_obj_is_instance_of(value, klass)) {
                 data[0] = rb_iv_get(value, "@x");
                 data[1] = rb_iv_get(value, "@y");
                 data[2] = rb_iv_get(value, "@width");
                 data[3] = rb_iv_get(value, "@height");
-              }
-          }
-        break;
-      default: rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-          rb_obj_classname(value));
+            }
+        } break;
+        default:
+            rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(value));
     }
 
-  /* Set values */
-  if(FIXNUM_P(data[0]) && FIXNUM_P(data[1]) && FIXNUM_P(data[2]) &&
-      FIXNUM_P(data[3]) && 0 < FIX2INT(data[2]) && 0 < FIX2INT(data[3]))
-    {
-      rb_iv_set(self, "@x",      data[0]);
-      rb_iv_set(self, "@y",      data[1]);
-      rb_iv_set(self, "@width",  data[2]);
-      rb_iv_set(self, "@height", data[3]);
+    /* Set values */
+    if (FIXNUM_P(data[0]) && FIXNUM_P(data[1]) && FIXNUM_P(data[2]) && FIXNUM_P(data[3]) &&
+        0 < FIX2INT(data[2]) && 0 < FIX2INT(data[3])) {
+        rb_iv_set(self, "@x", data[0]);
+        rb_iv_set(self, "@y", data[1]);
+        rb_iv_set(self, "@width", data[2]);
+        rb_iv_set(self, "@height", data[3]);
+    } else {
+        rb_raise(rb_eStandardError, "Invalid geometry");
     }
-  else rb_raise(rb_eStandardError, "Invalid geometry");
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextGeometryToArray {{{ */
@@ -194,27 +171,25 @@ subextGeometryInit(int argc,
  *  => [0, 0, 50, 50]
  */
 
-VALUE
-subextGeometryToArray(VALUE self)
-{
-  VALUE ary = Qnil, x = Qnil, y = Qnil, width = Qnil, height = Qnil;
+VALUE subextGeometryToArray(VALUE self) {
+    VALUE ary = Qnil, x = Qnil, y = Qnil, width = Qnil, height = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@x",      x);
-  GET_ATTR(self, "@y",      y);
-  GET_ATTR(self, "@width",  width);
-  GET_ATTR(self, "@height", height);
+    /* Check ruby object */
+    GET_ATTR(self, "@x", x);
+    GET_ATTR(self, "@y", y);
+    GET_ATTR(self, "@width", width);
+    GET_ATTR(self, "@height", height);
 
-  /* Create new array */
-  ary = rb_ary_new2(4);
+    /* Create new array */
+    ary = rb_ary_new2(4);
 
-  /* Set values */
-  rb_ary_push(ary, x);
-  rb_ary_push(ary, y);
-  rb_ary_push(ary, width);
-  rb_ary_push(ary, height);
+    /* Set values */
+    rb_ary_push(ary, x);
+    rb_ary_push(ary, y);
+    rb_ary_push(ary, width);
+    rb_ary_push(ary, height);
 
-  return ary;
+    return ary;
 } /* }}} */
 
 /* subextGeometryToHash {{{ */
@@ -228,29 +203,27 @@ subextGeometryToArray(VALUE self)
  *  => { :x => 0, :y => 0, :width => 50, :height => 50 }
  */
 
-VALUE
-subextGeometryToHash(VALUE self)
-{
-  VALUE klass = Qnil, hash = Qnil;
-  VALUE x = Qnil, y = Qnil, width = Qnil, height = Qnil;
+VALUE subextGeometryToHash(VALUE self) {
+    VALUE klass = Qnil, hash = Qnil;
+    VALUE x = Qnil, y = Qnil, width = Qnil, height = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@x",      x);
-  GET_ATTR(self, "@y",      y);
-  GET_ATTR(self, "@width",  width);
-  GET_ATTR(self, "@height", height);
+    /* Check ruby object */
+    GET_ATTR(self, "@x", x);
+    GET_ATTR(self, "@y", y);
+    GET_ATTR(self, "@width", width);
+    GET_ATTR(self, "@height", height);
 
-  /* Create new hash */
-  klass = rb_const_get(rb_mKernel, rb_intern("Hash"));
-  hash  = rb_funcall(klass, rb_intern("new"), 0, NULL);
+    /* Create new hash */
+    klass = rb_const_get(rb_mKernel, rb_intern("Hash"));
+    hash = rb_funcall(klass, rb_intern("new"), 0, NULL);
 
-  /* Set values */
-  rb_hash_aset(hash, CHAR2SYM("x"),      x);
-  rb_hash_aset(hash, CHAR2SYM("y"),      y);
-  rb_hash_aset(hash, CHAR2SYM("width"),  width);
-  rb_hash_aset(hash, CHAR2SYM("height"), height);
+    /* Set values */
+    rb_hash_aset(hash, CHAR2SYM("x"), x);
+    rb_hash_aset(hash, CHAR2SYM("y"), y);
+    rb_hash_aset(hash, CHAR2SYM("width"), width);
+    rb_hash_aset(hash, CHAR2SYM("height"), height);
 
-  return hash;
+    return hash;
 } /* }}} */
 
 /* subextGeometryToString {{{ */
@@ -263,22 +236,20 @@ subextGeometryToHash(VALUE self)
  *  => "0x0+50+50"
  */
 
-VALUE
-subextGeometryToString(VALUE self)
-{
-  char buf[256] = { 0 };
-  VALUE x = Qnil, y = Qnil, width = Qnil, height = Qnil;
+VALUE subextGeometryToString(VALUE self) {
+    char buf[256] = {0};
+    VALUE x = Qnil, y = Qnil, width = Qnil, height = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@x",      x);
-  GET_ATTR(self, "@y",      y);
-  GET_ATTR(self, "@width",  width);
-  GET_ATTR(self, "@height", height);
+    /* Check ruby object */
+    GET_ATTR(self, "@x", x);
+    GET_ATTR(self, "@y", y);
+    GET_ATTR(self, "@width", width);
+    GET_ATTR(self, "@height", height);
 
-  snprintf(buf, sizeof(buf), "%dx%d+%d+%d", (int)FIX2INT(x),
-    (int)FIX2INT(y), (int)FIX2INT(width), (int)FIX2INT(height));
+    snprintf(buf, sizeof(buf), "%dx%d+%d+%d", (int) FIX2INT(x), (int) FIX2INT(y),
+             (int) FIX2INT(width), (int) FIX2INT(height));
 
-  return rb_str_new2(buf);
+    return rb_str_new2(buf);
 } /* }}} */
 
 /* subextGeometryEqual {{{ */
@@ -291,11 +262,8 @@ subextGeometryToString(VALUE self)
  *  => true
  */
 
-VALUE
-subextGeometryEqual(VALUE self,
-  VALUE other)
-{
-  return GeometryEqual(self, other);
+VALUE subextGeometryEqual(VALUE self, VALUE other) {
+    return GeometryEqual(self, other);
 } /* }}} */
 
 /* subextGeometryEqualTyped {{{ */
@@ -308,11 +276,8 @@ subextGeometryEqual(VALUE self,
  *  => true
  */
 
-VALUE
-subextGeometryEqualTyped(VALUE self,
-  VALUE other)
-{
-  return GeometryEqual(self, other);
+VALUE subextGeometryEqualTyped(VALUE self, VALUE other) {
+    return GeometryEqual(self, other);
 } /* }}} */
 
 // vim:ts=2:bs=2:sw=2:et:fdm=marker

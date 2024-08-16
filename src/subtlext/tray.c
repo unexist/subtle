@@ -1,43 +1,42 @@
 
- /**
-  * @package subtle
-  *
-  * @file subtle ruby extension
-  * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
-  * @version $Id$
-  *
-  * This program can be distributed under the terms of the GNU GPLv2.
-  * See the file COPYING for details.
-  **/
+/**
+ * @package subtle
+ *
+ * @file subtle ruby extension
+ * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPLv2.
+ * See the file COPYING for details.
+ **/
 
 #include "subtlext.h"
 
 /* TrayFind {{{ */
-static VALUE
-TrayFind(VALUE value,
-  int first)
-{
-  int flags = 0;
-  VALUE parsed = Qnil;
-  char buf[50] = { 0 };
+static VALUE TrayFind(VALUE value, int first) {
+    int flags = 0;
+    VALUE parsed = Qnil;
+    char buf[50] = {0};
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Check object type */
-  switch(rb_type(parsed = subextSubtlextParse(
-      value, buf, sizeof(buf), &flags)))
-    {
-      case T_SYMBOL:
-        if(CHAR2SYM("all") == parsed)
-          return subextTraySingList(Qnil);
-        break;
-      case T_OBJECT:
-        if(rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Tray"))))
-          return parsed;
+    /* Check object type */
+    switch (rb_type(parsed = subextSubtlextParse(value, buf, sizeof(buf), &flags))) {
+        case T_SYMBOL:
+            if (CHAR2SYM("all") == parsed) {
+                return subextTraySingList(Qnil);
+            }
+            break;
+        case T_OBJECT:
+            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Tray")))) {
+                return parsed;
+            }
+            break;
+        default:
+            rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(parsed));
     }
 
-  return subextSubtlextFindWindows("SUBTLE_TRAY_LIST", "Tray",
-    buf, flags, first);
+    return subextSubtlextFindWindows("SUBTLE_TRAY_LIST", "Tray", buf, flags, first);
 } /* }}} */
 
 /* Singleton */
@@ -79,11 +78,8 @@ TrayFind(VALUE value,
  *  => [#<Subtlext::Tray:xxx>]
  */
 
-VALUE
-subextTraySingFind(VALUE self,
-  VALUE value)
-{
-  return TrayFind(value, False);
+VALUE subextTraySingFind(VALUE self, VALUE value) {
+    return TrayFind(value, False);
 } /* }}} */
 
 /* subextTraySingFirst {{{ */
@@ -110,11 +106,8 @@ subextTraySingFind(VALUE self,
  *  => #<Subtlext::Tray:xxx>
  */
 
-VALUE
-subextTraySingFirst(VALUE self,
-  VALUE value)
-{
-  return TrayFind(value, True);
+VALUE subextTraySingFirst(VALUE self, VALUE value) {
+    return TrayFind(value, True);
 } /* }}} */
 
 /* subextTraySingList {{{ */
@@ -131,51 +124,47 @@ subextTraySingFirst(VALUE self,
  *  => []
  */
 
-VALUE
-subextTraySingList(VALUE self)
-{
-  int i, ntrays = 0;
-  Window *trays = NULL;
-  VALUE meth = Qnil, klass = Qnil, array = Qnil;
+VALUE subextTraySingList(VALUE self) {
+    int i, ntrays = 0;
+    Window *trays = NULL;
+    VALUE meth = Qnil, klass = Qnil, array = Qnil;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  meth  = rb_intern("new");
-  klass = rb_const_get(mod, rb_intern("Tray"));
-  array = rb_ary_new();
+    /* Fetch data */
+    meth = rb_intern("new");
+    klass = rb_const_get(mod, rb_intern("Tray"));
+    array = rb_ary_new();
 
-  /* Check results */
-  if((trays = subextSubtlextWindowList("SUBTLE_TRAY_LIST", &ntrays)))
-    {
-      for(i = 0; i < ntrays; i++)
-        {
-          VALUE t = rb_funcall(klass, meth, 1, LONG2NUM(trays[i]));
+    /* Check results */
+    if ((trays = subextSubtlextWindowList("SUBTLE_TRAY_LIST", &ntrays))) {
+        for (i = 0; i < ntrays; i++) {
+            VALUE t = rb_funcall(klass, meth, 1, LONG2NUM(trays[i]));
 
-          if(!NIL_P(t)) subextTrayUpdate(t);
+            if (!NIL_P(t)) {
+                subextTrayUpdate(t);
+            }
 
-          rb_ary_push(array, t);
+            rb_ary_push(array, t);
         }
 
-      free(trays);
+        free(trays);
     }
 
-  return array;
+    return array;
 } /* }}} */
 
 /* Helper */
 
 /* subextTrayInstantiate {{{ */
-VALUE
-subextTrayInstantiate(Window win)
-{
-  VALUE klass = Qnil, tray = Qnil;
+VALUE subextTrayInstantiate(Window win) {
+    VALUE klass = Qnil, tray = Qnil;
 
-  /* Create new instance */
-  klass = rb_const_get(mod, rb_intern("Tray"));
-  tray  = rb_funcall(klass, rb_intern("new"), 1, LONG2NUM(win));
+    /* Create new instance */
+    klass = rb_const_get(mod, rb_intern("Tray"));
+    tray = rb_funcall(klass, rb_intern("new"), 1, LONG2NUM(win));
 
-  return tray;
+    return tray;
 } /* }}} */
 
 /* Class */
@@ -192,23 +181,20 @@ subextTrayInstantiate(Window win)
  *  => #<Subtlext::Tray:xxx>
  */
 
-VALUE
-subextTrayInit(VALUE self,
-  VALUE win)
-{
-  if(!FIXNUM_P(win) && T_BIGNUM != rb_type(win))
-    rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-      rb_obj_classname(win));
+VALUE subextTrayInit(VALUE self, VALUE win) {
+    if (!FIXNUM_P(win) && T_BIGNUM != rb_type(win)) {
+        rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(win));
+    }
 
-  /* Init object */
-  rb_iv_set(self, "@win",   win);
-  rb_iv_set(self, "@name",  Qnil);
-  rb_iv_set(self, "@klass", Qnil);
-  rb_iv_set(self, "@title", Qnil);
+    /* Init object */
+    rb_iv_set(self, "@win", win);
+    rb_iv_set(self, "@name", Qnil);
+    rb_iv_set(self, "@klass", Qnil);
+    rb_iv_set(self, "@title", Qnil);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextTrayUpdate {{{ */
@@ -221,39 +207,37 @@ subextTrayInit(VALUE self,
  *  => #<Subtlext::Tray:xxx>
  */
 
-VALUE
-subextTrayUpdate(VALUE self)
-{
-  Window win = None;
+VALUE subextTrayUpdate(VALUE self) {
+    Window win = None;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    /* Check ruby object */
+    rb_check_frozen(self);
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Get tray values */
-  win = NUM2LONG(rb_iv_get(self, "@win"));
+    /* Get tray values */
+    win = NUM2LONG(rb_iv_get(self, "@win"));
 
-  /* Check values */
-  if(0 <= win)
-    {
-      char *wmname = NULL, *wminstance = NULL, *wmclass = NULL;
+    /* Check values */
+    if (0 <= win) {
+        char *wmname = NULL, *wminstance = NULL, *wmclass = NULL;
 
-      /* Get name, instance and class */
-      subSharedPropertyClass(display, win, &wminstance, &wmclass);
-      subSharedPropertyName(display, win, &wmname, wmclass);
+        /* Get name, instance and class */
+        subSharedPropertyClass(display, win, &wminstance, &wmclass);
+        subSharedPropertyName(display, win, &wmname, wmclass);
 
-      /* Set properties */
-      rb_iv_set(self, "@name",     rb_str_new2(wmname));
-      rb_iv_set(self, "@instance", rb_str_new2(wminstance));
-      rb_iv_set(self, "@klass",    rb_str_new2(wmclass));
+        /* Set properties */
+        rb_iv_set(self, "@name", rb_str_new2(wmname));
+        rb_iv_set(self, "@instance", rb_str_new2(wminstance));
+        rb_iv_set(self, "@klass", rb_str_new2(wmclass));
 
-      free(wmname);
-      free(wminstance);
-      free(wmclass);
+        free(wmname);
+        free(wminstance);
+        free(wmclass);
+    } else {
+        rb_raise(rb_eStandardError, "Invalid tray id `%#lx`", win);
     }
-  else rb_raise(rb_eStandardError, "Invalid tray id `%#lx`", win);
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextTrayToString {{{ */
@@ -266,15 +250,13 @@ subextTrayUpdate(VALUE self)
  *  => "subtle"
  */
 
-VALUE
-subextTrayToString(VALUE self)
-{
-  VALUE name = Qnil;
+VALUE subextTrayToString(VALUE self) {
+    VALUE name = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@name", name);
+    /* Check ruby object */
+    GET_ATTR(self, "@name", name);
 
-  return name;
+    return name;
 } /* }}} */
 
 /* subextTrayKill {{{ */
@@ -287,28 +269,25 @@ subextTrayToString(VALUE self)
  *  => nil
  */
 
-VALUE
-subextTrayKill(VALUE self)
-{
-  VALUE win = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+VALUE subextTrayKill(VALUE self) {
+    VALUE win = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@win", win);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@win", win);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Send message */
-  data.l[0] = CurrentTime;
-  data.l[1] = 2; ///< Claim to be a pager
+    /* Send message */
+    data.l[0] = CurrentTime;
+    data.l[1] = 2; ///< Claim to be a pager
 
-  subSharedMessage(display, NUM2LONG(win),
-    "_NET_CLOSE_WINDOW", data, 32, True);
+    subSharedMessage(display, NUM2LONG(win), "_NET_CLOSE_WINDOW", data, 32, True);
 
-  rb_obj_freeze(self);
+    rb_obj_freeze(self);
 
-  return Qnil;
+    return Qnil;
 } /* }}} */
 
 // vim:ts=2:bs=2:sw=2:et:fdm=marker

@@ -1,44 +1,44 @@
 
- /**
-  * @package subtle
-  *
-  * @file subtle ruby extension
-  * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
-  * @version $Id$
-  *
-  * This program can be distributed under the terms of the GNU GPLv2.
-  * See the file COPYING for details.
-  **/
+/**
+ * @package subtle
+ *
+ * @file subtle ruby extension
+ * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPLv2.
+ * See the file COPYING for details.
+ **/
 
 #include "subtlext.h"
 
 /* TagFind {{{ */
-static VALUE
-TagFind(VALUE value,
-  int first)
-{
-  int flags = 0;
-  VALUE parsed = Qnil;
-  char buf[50] = { 0 };
+static VALUE TagFind(VALUE value, int first) {
+    int flags = 0;
+    VALUE parsed = Qnil;
+    char buf[50] = {0};
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Check object type */
-  switch(rb_type(parsed = subextSubtlextParse(
-      value, buf, sizeof(buf), &flags)))
-    {
-      case T_SYMBOL:
-        if(CHAR2SYM("visible") == parsed)
-          return subextTagSingVisible(Qnil);
-        else if(CHAR2SYM("all") == parsed)
-          return subextTagSingList(Qnil);
-        break;
-      case T_OBJECT:
-        if(rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Tag"))))
-          return parsed;
+    /* Check object type */
+    switch (rb_type(parsed = subextSubtlextParse(value, buf, sizeof(buf), &flags))) {
+        case T_SYMBOL:
+            if (CHAR2SYM("visible") == parsed) {
+                return subextTagSingVisible(Qnil);
+            } else if (CHAR2SYM("all") == parsed) {
+                return subextTagSingList(Qnil);
+            }
+            break;
+        case T_OBJECT:
+            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Tag")))) {
+                return parsed;
+            }
+            break;
+        default:
+            rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(parsed));
     }
 
-  return subextSubtlextFindObjects("SUBTLE_TAG_LIST", "Tag", buf, flags, first);
+    return subextSubtlextFindObjects("SUBTLE_TAG_LIST", "Tag", buf, flags, first);
 } /* }}} */
 
 /* Singleton */
@@ -72,11 +72,8 @@ TagFind(VALUE value,
  *  => [#<Subtlext::Tag:xxx>]
  */
 
-VALUE
-subextTagSingFind(VALUE self,
-  VALUE value)
-{
-  return TagFind(value, False);
+VALUE subextTagSingFind(VALUE self, VALUE value) {
+    return TagFind(value, False);
 } /* }}} */
 
 /* subextTagSingFirst {{{ */
@@ -98,11 +95,8 @@ subextTagSingFind(VALUE self,
  *  => #<Subtlext::Tag:xxx>
  */
 
-VALUE
-subextTagSingFirst(VALUE self,
-  VALUE value)
-{
-  return TagFind(value, True);
+VALUE subextTagSingFirst(VALUE self, VALUE value) {
+    return TagFind(value, True);
 } /* }}} */
 
 /* subextTagSingVisible {{{ */
@@ -118,46 +112,45 @@ subextTagSingFirst(VALUE self,
  *  => []
  */
 
-VALUE
-subextTagSingVisible(VALUE self)
-{
-  int i, ntags = 0;
-  char **tags = NULL;
-  unsigned long *visible = NULL;
-  VALUE meth = Qnil, klass = Qnil, array = Qnil, t = Qnil;
+VALUE subextTagSingVisible(VALUE self) {
+    int i, ntags = 0;
+    char **tags = NULL;
+    unsigned long *visible = NULL;
+    VALUE meth = Qnil, klass = Qnil, array = Qnil, t = Qnil;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  meth    = rb_intern("new");
-  klass   = rb_const_get(mod, rb_intern("Tag"));
-  array   = rb_ary_new();
-  tags    = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
-    XInternAtom(display, "SUBTLE_TAG_LIST", False), &ntags);
-  visible = (unsigned long *)subSharedPropertyGet(display,
-    DefaultRootWindow(display), XA_CARDINAL, XInternAtom(display,
-    "SUBTLE_VISIBLE_TAGS", False), NULL);
+    /* Fetch data */
+    meth = rb_intern("new");
+    klass = rb_const_get(mod, rb_intern("Tag"));
+    array = rb_ary_new();
+    tags = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
+                                       XInternAtom(display, "SUBTLE_TAG_LIST", False), &ntags);
+    visible = (unsigned long *) subSharedPropertyGet(
+            display, DefaultRootWindow(display), XA_CARDINAL,
+            XInternAtom(display, "SUBTLE_VISIBLE_TAGS", False), NULL);
 
-  /* Populate array */
-  if(tags && visible)
-    {
-      for(i = 0; i < ntags; i++)
-        {
-          /* Create tag on match */
-          if(*visible & (1L << (i + 1)) &&
-              !NIL_P(t = rb_funcall(klass, meth, 1, rb_str_new2(tags[i]))))
+    /* Populate array */
+    if (tags && visible) {
+        for (i = 0; i < ntags; i++) {
+            /* Create tag on match */
+            if (*visible & (1L << (i + 1))
+                && !NIL_P(t = rb_funcall(klass, meth, 1, rb_str_new2(tags[i]))))
             {
-              rb_iv_set(t, "@id", INT2FIX(i));
-              rb_ary_push(array, t);
+                rb_iv_set(t, "@id", INT2FIX(i));
+                rb_ary_push(array, t);
             }
         }
-
     }
 
-  if(tags)    XFreeStringList(tags);
-  if(visible) free(visible);
+    if (tags) {
+        XFreeStringList(tags);
+    }
+    if (visible) {
+        free(visible);
+    }
 
-  return array;
+    return array;
 } /* }}} */
 
 /* subextTagSingList {{{ */
@@ -174,51 +167,47 @@ subextTagSingVisible(VALUE self)
  *  => []
  */
 
-VALUE
-subextTagSingList(VALUE self)
-{
-  int i, ntags = 0;
-  char **tags = NULL;
-  VALUE meth = Qnil, klass = Qnil, array = Qnil;
+VALUE subextTagSingList(VALUE self) {
+    int i, ntags = 0;
+    char **tags = NULL;
+    VALUE meth = Qnil, klass = Qnil, array = Qnil;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  meth  = rb_intern("new");
-  klass = rb_const_get(mod, rb_intern("Tag"));
-  array = rb_ary_new();
+    /* Fetch data */
+    meth = rb_intern("new");
+    klass = rb_const_get(mod, rb_intern("Tag"));
+    array = rb_ary_new();
 
-  /* Check results */
-  if((tags = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
-      XInternAtom(display, "SUBTLE_TAG_LIST", False), &ntags)))
+    /* Check results */
+    if ((tags = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
+                                            XInternAtom(display, "SUBTLE_TAG_LIST", False),
+                                            &ntags)))
     {
-      for(i = 0; i < ntags; i++)
-        {
-          VALUE t = rb_funcall(klass, meth, 1, rb_str_new2(tags[i]));
+        for (i = 0; i < ntags; i++) {
+            VALUE t = rb_funcall(klass, meth, 1, rb_str_new2(tags[i]));
 
-          rb_iv_set(t, "@id", INT2FIX(i));
-          rb_ary_push(array, t);
+            rb_iv_set(t, "@id", INT2FIX(i));
+            rb_ary_push(array, t);
         }
 
-      XFreeStringList(tags);
+        XFreeStringList(tags);
     }
 
-  return array;
+    return array;
 } /* }}} */
 
 /* Helper */
 
 /* subextTagInstantiate {{{ */
-VALUE
-subextTagInstantiate(char *name)
-{
-  VALUE klass = Qnil, tag = Qnil;
+VALUE subextTagInstantiate(char *name) {
+    VALUE klass = Qnil, tag = Qnil;
 
-  /* Create new instance */
-  klass = rb_const_get(mod, rb_intern("Tag"));
-  tag   = rb_funcall(klass, rb_intern("new"), 1, rb_str_new2(name));
+    /* Create new instance */
+    klass = rb_const_get(mod, rb_intern("Tag"));
+    tag = rb_funcall(klass, rb_intern("new"), 1, rb_str_new2(name));
 
-  return tag;
+    return tag;
 } /* }}} */
 
 /* Class */
@@ -235,21 +224,18 @@ subextTagInstantiate(char *name)
  *  => #<Subtlext::Tag:xxx>
  */
 
-VALUE
-subextTagInit(VALUE self,
-  VALUE name)
-{
-  if(T_STRING != rb_type(name))
-    rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-      rb_obj_classname(name));
+VALUE subextTagInit(VALUE self, VALUE name) {
+    if (T_STRING != rb_type(name)) {
+        rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(name));
+    }
 
-  /* Init object */
-  rb_iv_set(self, "@id",   Qnil);
-  rb_iv_set(self, "@name", name);
+    /* Init object */
+    rb_iv_set(self, "@id", Qnil);
+    rb_iv_set(self, "@name", name);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextTagSave {{{ */
@@ -262,53 +248,48 @@ subextTagInit(VALUE self,
  *  => #<Subtlext::Tag:xxx>
  */
 
-VALUE
-subextTagSave(VALUE self)
-{
-  int id = -1;
-  VALUE name = Qnil;
+VALUE subextTagSave(VALUE self) {
+    int id = -1;
+    VALUE name = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@name", name);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@name", name);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Create tag if needed */
-  if(-1 == (id = subextSubtlextFindString("SUBTLE_TAG_LIST",
-      RSTRING_PTR(name), NULL, SUB_MATCH_EXACT)))
+    /* Create tag if needed */
+    if (-1 == (id = subextSubtlextFindString("SUBTLE_TAG_LIST", RSTRING_PTR(name), NULL,
+                                             SUB_MATCH_EXACT)))
     {
-      SubMessageData data = { { 0, 0, 0, 0, 0 } };
+        SubMessageData data = {{0, 0, 0, 0, 0}};
 
-      snprintf(data.b, sizeof(data.b), "%s", RSTRING_PTR(name));
-      subSharedMessage(display, DefaultRootWindow(display),
-        "SUBTLE_TAG_NEW", data, 8, True);
+        snprintf(data.b, sizeof(data.b), "%s", RSTRING_PTR(name));
+        subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_TAG_NEW", data, 8, True);
 
-      id = subextSubtlextFindString("SUBTLE_TAG_LIST",
-        RSTRING_PTR(name), NULL, SUB_MATCH_EXACT);
+        id = subextSubtlextFindString("SUBTLE_TAG_LIST", RSTRING_PTR(name), NULL, SUB_MATCH_EXACT);
     }
 
-  /* Guess tag id */
-  if(-1 == id)
-    {
-      int ntags = 0;
-      char **tags = NULL;
+    /* Guess tag id */
+    if (-1 == id) {
+        int ntags = 0;
+        char **tags = NULL;
 
-      /* Get names of tags */
-      if((tags = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
-          XInternAtom(display, "SUBTLE_TAG_LIST", False), &ntags)))
+        /* Get names of tags */
+        if ((tags = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
+                                                XInternAtom(display, "SUBTLE_TAG_LIST", False),
+                                                &ntags)))
         {
+            id = ntags; ///< New id should be last
 
-          id = ntags; ///< New id should be last
-
-          XFreeStringList(tags);
+            XFreeStringList(tags);
         }
     }
 
-  /* Set properties */
-  rb_iv_set(self, "@id", INT2FIX(id));
+    /* Set properties */
+    rb_iv_set(self, "@id", INT2FIX(id));
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextTagClients {{{ */
@@ -324,52 +305,45 @@ subextTagSave(VALUE self)
  *  => []
  */
 
-VALUE
-subextTagClients(VALUE self)
-{
-  int i, nclients = 0;
-  Window *clients = NULL;
-  unsigned long *tags = NULL;
-  VALUE id = Qnil, array = Qnil, klass = Qnil, meth = Qnil, c = Qnil;
+VALUE subextTagClients(VALUE self) {
+    int i, nclients = 0;
+    Window *clients = NULL;
+    unsigned long *tags = NULL;
+    VALUE id = Qnil, array = Qnil, klass = Qnil, meth = Qnil, c = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  /* Fetch data */
-  klass   = rb_const_get(mod, rb_intern("Client"));
-  meth    = rb_intern("new");
-  array   = rb_ary_new();
-  clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
+    /* Fetch data */
+    klass = rb_const_get(mod, rb_intern("Client"));
+    meth = rb_intern("new");
+    array = rb_ary_new();
+    clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
 
-  /* Check results */
-  if(clients)
-    {
-      for(i = 0; i < nclients; i++)
-        {
-          if((tags = (unsigned long *)subSharedPropertyGet(display,
-              clients[i], XA_CARDINAL, XInternAtom(display,
-              "SUBTLE_CLIENT_TAGS", False), NULL)))
+    /* Check results */
+    if (clients) {
+        for (i = 0; i < nclients; i++) {
+            if ((tags = (unsigned long *) subSharedPropertyGet(
+                         display, clients[i], XA_CARDINAL,
+                         XInternAtom(display, "SUBTLE_CLIENT_TAGS", False), NULL)))
             {
-              /* Check if tag id matches */
-              if(*tags & (1L << (FIX2INT(id) + 1)))
-                {
-                  /* Create new client */
-                  if(!NIL_P(c = rb_funcall(klass, meth, 1,
-                      LONG2NUM(clients[i]))))
-                    {
-                      subextClientUpdate(c);
+                /* Check if tag id matches */
+                if (*tags & (1L << (FIX2INT(id) + 1))) {
+                    /* Create new client */
+                    if (!NIL_P(c = rb_funcall(klass, meth, 1, LONG2NUM(clients[i])))) {
+                        subextClientUpdate(c);
 
-                      rb_ary_push(array, c);
+                        rb_ary_push(array, c);
                     }
                 }
             }
         }
 
-      free(clients);
+        free(clients);
     }
 
-  return array;
+    return array;
 } /* }}} */
 
 /* subextTagViews {{{ */
@@ -385,52 +359,50 @@ subextTagClients(VALUE self)
  *  => []
  */
 
-VALUE
-subextTagViews(VALUE self)
-{
-  int i, nnames = 0;
-  char **names = NULL;
-  unsigned long *tags = NULL;
-  VALUE id = Qnil, array = Qnil, klass = Qnil, meth = Qnil, v = Qnil;
+VALUE subextTagViews(VALUE self) {
+    int i, nnames = 0;
+    char **names = NULL;
+    unsigned long *tags = NULL;
+    VALUE id = Qnil, array = Qnil, klass = Qnil, meth = Qnil, v = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  klass  = rb_const_get(mod, rb_intern("View"));
-  meth   = rb_intern("new");
-  array  = rb_ary_new();
-  names  = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
-    XInternAtom(display, "_NET_DESKTOP_NAMES", False), &nnames);
-  tags   = (unsigned long *)subSharedPropertyGet(display,
-    DefaultRootWindow(display), XA_CARDINAL,
-    XInternAtom(display, "SUBTLE_VIEW_TAGS", False), NULL);
+    /* Fetch data */
+    klass = rb_const_get(mod, rb_intern("View"));
+    meth = rb_intern("new");
+    array = rb_ary_new();
+    names = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
+                                        XInternAtom(display, "_NET_DESKTOP_NAMES", False), &nnames);
+    tags = (unsigned long *) subSharedPropertyGet(display, DefaultRootWindow(display), XA_CARDINAL,
+                                                  XInternAtom(display, "SUBTLE_VIEW_TAGS", False),
+                                                  NULL);
 
-  /* Check results */
-  if(names && tags)
-    {
-      for(i = 0; i < nnames; i++)
-        {
-          /* Check if tag id matches */
-          if(tags[i] & (1L << (FIX2INT(id) + 1)))
-            {
-              /* Create new view */
-              if(!NIL_P(v = rb_funcall(klass, meth, 1, rb_str_new2(names[i]))))
-                {
-                  rb_iv_set(v, "@id",  INT2FIX(i));
-                  rb_ary_push(array, v);
+    /* Check results */
+    if (names && tags) {
+        for (i = 0; i < nnames; i++) {
+            /* Check if tag id matches */
+            if (tags[i] & (1L << (FIX2INT(id) + 1))) {
+                /* Create new view */
+                if (!NIL_P(v = rb_funcall(klass, meth, 1, rb_str_new2(names[i])))) {
+                    rb_iv_set(v, "@id", INT2FIX(i));
+                    rb_ary_push(array, v);
                 }
             }
         }
     }
 
-  if(names) XFreeStringList(names);
-  if(tags)  free(tags);
+    if (names) {
+        XFreeStringList(names);
+    }
+    if (tags) {
+        free(tags);
+    }
 
-  return array;
+    return array;
 } /* }}} */
 
 /* subextTagToString {{{ */
@@ -443,15 +415,13 @@ subextTagViews(VALUE self)
  *  => "subtle"
  */
 
-VALUE
-subextTagToString(VALUE self)
-{
-  VALUE name = Qnil;
+VALUE subextTagToString(VALUE self) {
+    VALUE name = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@name", name);
+    /* Check ruby object */
+    GET_ATTR(self, "@name", name);
 
-  return name;
+    return name;
 } /* }}} */
 
 /* subextTagKill {{{ */
@@ -464,27 +434,24 @@ subextTagToString(VALUE self)
  *  => nil
  */
 
-VALUE
-subextTagKill(VALUE self)
-{
-  VALUE id = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+VALUE subextTagKill(VALUE self) {
+    VALUE id = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Send message */
-  data.l[0] = FIX2INT(id);
+    /* Send message */
+    data.l[0] = FIX2INT(id);
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    "SUBTLE_TAG_KILL", data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_TAG_KILL", data, 32, True);
 
-  rb_obj_freeze(self); ///< Freeze object
+    rb_obj_freeze(self); ///< Freeze object
 
-  return Qnil;
+    return Qnil;
 } /* }}} */
 
 // vim:ts=2:bs=2:sw=2:et:fdm=marker

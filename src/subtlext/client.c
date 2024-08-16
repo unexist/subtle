@@ -13,9 +13,8 @@
 #include "subtlext.h"
 
 /* ClientRestack {{{ */
-VALUE
-ClientRestack(VALUE self, int detail) {
-    VALUE win = Qnil;
+VALUE ClientRestack(VALUE self, int detail) {
+    VALUE win           = Qnil;
     SubMessageData data = {{0, 0, 0, 0, 0}};
 
     /* Check ruby object */
@@ -49,8 +48,8 @@ static VALUE ClientFlagsGet(VALUE self, int flag) {
 
 /* ClientFlagsSet {{{ */
 static VALUE ClientFlagsSet(VALUE self, int flag, int toggle) {
-    int iflags = flag;
-    VALUE win = Qnil;
+    int iflags          = flag;
+    VALUE win           = Qnil;
     SubMessageData data = {{0, 0, 0, 0, 0}};
 
     /* Check ruby object */
@@ -64,10 +63,11 @@ static VALUE ClientFlagsSet(VALUE self, int flag, int toggle) {
         GET_ATTR(self, "@flags", flags);
 
         iflags = FIX2INT(flags);
-        if (iflags & flag)
+        if (iflags & flag) {
             iflags &= ~flag;
-        else
+        } else {
             iflags |= flag;
+        }
     }
 
     /* Assemble message */
@@ -96,10 +96,11 @@ static VALUE ClientFlagsToggle(VALUE self, char *type, int flag) {
 
     /* Update flags */
     iflags = FIX2INT(flags);
-    if (iflags & flag)
+    if (iflags & flag) {
         iflags &= ~flag;
-    else
+    } else {
         iflags |= flag;
+    }
 
     rb_iv_set(self, "@flags", INT2FIX(iflags));
 
@@ -122,16 +123,18 @@ static int ClientGravity(VALUE key, VALUE value, VALUE client) {
     if (RTEST(value)) {
         VALUE gravity = Qnil;
 
-        if (RTEST((gravity = subextGravitySingFirst(Qnil, value))))
+        if (RTEST((gravity = subextGravitySingFirst(Qnil, value)))) {
             data.l[1] = FIX2INT(rb_iv_get(gravity, "@id"));
+        }
     }
 
     /* Find view id if any */
     if (RTEST(key)) {
         VALUE view = Qnil;
 
-        if (RTEST((view = subextViewSingFirst(Qnil, key))))
+        if (RTEST((view = subextViewSingFirst(Qnil, key)))) {
             data.l[2] = FIX2INT(rb_iv_get(view, "@id"));
+        }
     }
 
     /* Finally send message */
@@ -145,7 +148,7 @@ static int ClientGravity(VALUE key, VALUE value, VALUE client) {
 
 /* ClientFind {{{ */
 static VALUE ClientFind(VALUE value, int first) {
-    int flags = 0;
+    int flags    = 0;
     VALUE parsed = Qnil;
     char buf[50] = {0};
 
@@ -154,16 +157,21 @@ static VALUE ClientFind(VALUE value, int first) {
     /* Check object type */
     switch (rb_type(parsed = subextSubtlextParse(value, buf, sizeof(buf), &flags))) {
         case T_SYMBOL:
-            if (CHAR2SYM("visible") == parsed)
+            if (CHAR2SYM("visible") == parsed) {
                 return subextClientSingVisible(Qnil);
-            else if (CHAR2SYM("all") == parsed)
+            } else if (CHAR2SYM("all") == parsed) {
                 return subextClientSingList(Qnil);
-            else if (CHAR2SYM("current") == parsed)
+            } else if (CHAR2SYM("current") == parsed) {
                 return subextClientSingCurrent(Qnil);
+            }
             break;
         case T_OBJECT:
-            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Client"))))
+            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Client")))) {
                 return parsed;
+            }
+            break;
+        default:
+            rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(parsed));
     }
 
     return subextSubtlextFindWindows("_NET_CLIENT_LIST", "Client", buf, flags, first);
@@ -181,8 +189,7 @@ static VALUE ClientFind(VALUE value, int first) {
  *  => #<Subtlext::Client:xxx>
  */
 
-VALUE
-subextClientSingSelect(VALUE self) {
+VALUE subextClientSingSelect(VALUE self) {
     VALUE win = subextSubtleSingSelect(self);
 
     return None != NUM2LONG(win) ? subextClientSingFind(self, win) : Qnil;
@@ -230,8 +237,9 @@ subextClientSingSelect(VALUE self) {
  *  => [#<Subtlext::Client:xxx>]
  */
 
-VALUE
-subextClientSingFind(VALUE self, VALUE value) { return ClientFind(value, False); } /* }}} */
+VALUE subextClientSingFind(VALUE self, VALUE value) {
+    return ClientFind(value, False);
+} /* }}} */
 
 /* subextClientSingFirst {{{ */
 /*
@@ -265,8 +273,9 @@ subextClientSingFind(VALUE self, VALUE value) { return ClientFind(value, False);
  *  => #<Subtlext::Client:xxx>
  */
 
-VALUE
-subextClientSingFirst(VALUE self, VALUE value) { return ClientFind(value, True); } /* }}} */
+VALUE subextClientSingFirst(VALUE self, VALUE value) {
+    return ClientFind(value, True);
+} /* }}} */
 
 /* subextClientSingCurrent {{{ */
 /*
@@ -278,9 +287,8 @@ subextClientSingFirst(VALUE self, VALUE value) { return ClientFind(value, True);
  *  => #<Subtlext::Client:xxx>
  */
 
-VALUE
-subextClientSingCurrent(VALUE self) {
-    VALUE client = Qnil;
+VALUE subextClientSingCurrent(VALUE self) {
+    VALUE client         = Qnil;
     unsigned long *focus = NULL;
 
     subextSubtlextConnect(NULL); ///< Implicit open connection
@@ -290,12 +298,14 @@ subextClientSingCurrent(VALUE self) {
                  display, DefaultRootWindow(display), XA_WINDOW,
                  XInternAtom(display, "_NET_ACTIVE_WINDOW", False), NULL))) {
         /* Update client values */
-        if (RTEST(client = subextClientInstantiate(*focus)))
+        if (RTEST(client = subextClientInstantiate(*focus))) {
             subextClientUpdate(client);
+        }
 
         free(focus);
-    } else
+    } else {
         rb_raise(rb_eStandardError, "Invalid current window");
+    }
 
     return client;
 } /* }}} */
@@ -313,19 +323,18 @@ subextClientSingCurrent(VALUE self) {
  *  => []
  */
 
-VALUE
-subextClientSingVisible(VALUE self) {
+VALUE subextClientSingVisible(VALUE self) {
     int i, nclients = 0;
-    Window *clients = NULL;
+    Window *clients        = NULL;
     unsigned long *visible = NULL;
     VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
 
     subextSubtlextConnect(NULL); ///< Implicit open connection
 
     /* Fetch data */
-    meth = rb_intern("new");
-    array = rb_ary_new();
-    klass = rb_const_get(mod, rb_intern("Client"));
+    meth    = rb_intern("new");
+    array   = rb_ary_new();
+    klass   = rb_const_get(mod, rb_intern("Client"));
     clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
     visible = (unsigned long *) subSharedPropertyGet(
             display, DefaultRootWindow(display), XA_CARDINAL,
@@ -345,15 +354,18 @@ subextClientSingVisible(VALUE self) {
                 rb_ary_push(array, client);
             }
 
-            if (tags)
+            if (tags) {
                 free(tags);
+            }
         }
     }
 
-    if (clients)
+    if (clients) {
         free(clients);
-    if (visible)
+    }
+    if (visible) {
         free(visible);
+    }
 
     return array;
 } /* }}} */
@@ -372,8 +384,7 @@ subextClientSingVisible(VALUE self) {
  *  => []
  */
 
-VALUE
-subextClientSingList(VALUE self) {
+VALUE subextClientSingList(VALUE self) {
     int i, nclients = 0;
     Window *clients = NULL;
     VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
@@ -381,9 +392,9 @@ subextClientSingList(VALUE self) {
     subextSubtlextConnect(NULL); ///< Implicit open connection
 
     /* Fetch data */
-    meth = rb_intern("new");
-    array = rb_ary_new();
-    klass = rb_const_get(mod, rb_intern("Client"));
+    meth    = rb_intern("new");
+    array   = rb_ary_new();
+    klass   = rb_const_get(mod, rb_intern("Client"));
     clients = subextSubtlextWindowList("_NET_CLIENT_LIST", &nclients);
 
     /* Check results */
@@ -412,8 +423,7 @@ subextClientSingList(VALUE self) {
  *  => [ #<Subtlext::Client:xxx> ]
  */
 
-VALUE
-subextClientSingRecent(VALUE self) {
+VALUE subextClientSingRecent(VALUE self) {
     int i, nclients = 0;
     Window *clients = NULL;
     VALUE meth = Qnil, klass = Qnil, array = Qnil, client = Qnil;
@@ -421,9 +431,9 @@ subextClientSingRecent(VALUE self) {
     subextSubtlextConnect(NULL); ///< Implicit open connection
 
     /* Fetch data */
-    meth = rb_intern("new");
-    array = rb_ary_new();
-    klass = rb_const_get(mod, rb_intern("Client"));
+    meth    = rb_intern("new");
+    array   = rb_ary_new();
+    klass   = rb_const_get(mod, rb_intern("Client"));
     clients = subextSubtlextWindowList("_NET_ACTIVE_WINDOW", &nclients);
 
     /* Check results */
@@ -452,8 +462,7 @@ subextClientSingRecent(VALUE self) {
  *  => #<Subtlext::Client:xxx>
  */
 
-VALUE
-subextClientSingSpawn(VALUE self, VALUE cmd) {
+VALUE subextClientSingSpawn(VALUE self, VALUE cmd) {
     VALUE ret = Qnil;
 
     /* Check object type */
@@ -468,8 +477,9 @@ subextClientSingSpawn(VALUE self, VALUE cmd) {
             ret = subextClientInstantiate((Window) pid);
             rb_iv_set(ret, "@pid", INT2FIX((int) pid));
         }
-    } else
+    } else {
         rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(cmd));
+    }
 
     return ret;
 } /* }}} */
@@ -477,12 +487,11 @@ subextClientSingSpawn(VALUE self, VALUE cmd) {
 /* Helper */
 
 /* subextClientInstantiate {{{ */
-VALUE
-subextClientInstantiate(Window win) {
+VALUE subextClientInstantiate(Window win) {
     VALUE klass = Qnil, client = Qnil;
 
     /* Create new instance */
-    klass = rb_const_get(mod, rb_intern("Client"));
+    klass  = rb_const_get(mod, rb_intern("Client"));
     client = rb_funcall(klass, rb_intern("new"), 1, LONG2NUM(win));
 
     return client;
@@ -502,8 +511,7 @@ subextClientInstantiate(Window win) {
  *  => #<Subtlext::Client:xxx>
  */
 
-VALUE
-subextClientInit(VALUE self, VALUE win) {
+VALUE subextClientInit(VALUE self, VALUE win) {
     if (!FIXNUM_P(win))
         rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(win));
 
@@ -534,8 +542,7 @@ subextClientInit(VALUE self, VALUE win) {
  *  => nil
  */
 
-VALUE
-subextClientUpdate(VALUE self) {
+VALUE subextClientUpdate(VALUE self) {
     Window win = None;
 
     rb_check_frozen(self);
@@ -556,8 +563,8 @@ subextClientUpdate(VALUE self) {
         flags = (int *) subSharedPropertyGet(display, win, XA_CARDINAL,
                                              XInternAtom(display, "SUBTLE_CLIENT_FLAGS", False),
                                              NULL);
-        role = subSharedPropertyGet(display, win, XA_STRING,
-                                    XInternAtom(display, "WM_WINDOW_ROLE", False), NULL);
+        role  = subSharedPropertyGet(display, win, XA_STRING,
+                                     XInternAtom(display, "WM_WINDOW_ROLE", False), NULL);
 
         /* Set properties */
         rb_iv_set(self, "@tags", tags ? INT2FIX(*tags) : INT2FIX(0));
@@ -571,17 +578,21 @@ subextClientUpdate(VALUE self) {
         rb_iv_set(self, "@geometry", Qnil);
         rb_iv_set(self, "@gravity", Qnil);
 
-        if (tags)
+        if (tags) {
             free(tags);
-        if (flags)
+        }
+        if (flags) {
             free(flags);
-        if (role)
+        }
+        if (role) {
             free(role);
+        }
         free(wmname);
         free(wminstance);
         free(wmclass);
-    } else
+    } else {
         rb_raise(rb_eStandardError, "Invalid client id `%#lx'", win);
+    }
 
     return self;
 } /* }}} */
@@ -599,8 +610,7 @@ subextClientUpdate(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientViewList(VALUE self) {
+VALUE subextClientViewList(VALUE self) {
     int i, nnames = 0;
     char **names = NULL;
     VALUE win = Qnil, array = Qnil, method = Qnil, klass = Qnil;
@@ -613,11 +623,11 @@ subextClientViewList(VALUE self) {
     subextSubtlextConnect(NULL); ///< Implicit open connection
 
     /* Fetch data */
-    method = rb_intern("new");
-    klass = rb_const_get(mod, rb_intern("View"));
-    array = rb_ary_new();
-    names = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
-                                        XInternAtom(display, "_NET_DESKTOP_NAMES", False), &nnames);
+    method    = rb_intern("new");
+    klass     = rb_const_get(mod, rb_intern("View"));
+    array     = rb_ary_new();
+    names     = subSharedPropertyGetStrings(display, DefaultRootWindow(display),
+                                            XInternAtom(display, "_NET_DESKTOP_NAMES", False), &nnames);
     view_tags = (unsigned long *) subSharedPropertyGet(
             display, DefaultRootWindow(display), XA_CARDINAL,
             XInternAtom(display, "SUBTLE_VIEW_TAGS", False), NULL);
@@ -642,14 +652,18 @@ subextClientViewList(VALUE self) {
         }
     }
 
-    if (names)
+    if (names) {
         XFreeStringList(names);
-    if (view_tags)
+    }
+    if (view_tags) {
         free(view_tags);
-    if (client_tags)
+    }
+    if (client_tags) {
         free(client_tags);
-    if (flags)
+    }
+    if (flags) {
         free(flags);
+    }
 
     return array;
 } /* }}} */
@@ -667,8 +681,9 @@ subextClientViewList(VALUE self) {
  *  => false
  */
 
-VALUE
-subextClientFlagsAskFull(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FULL); } /* }}} */
+VALUE subextClientFlagsAskFull(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_FULL);
+} /* }}} */
 
 /* subextClientFlagsAskFloat {{{ */
 /*
@@ -683,8 +698,9 @@ subextClientFlagsAskFull(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FULL
  *  => false
  */
 
-VALUE
-subextClientFlagsAskFloat(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FLOAT); } /* }}} */
+VALUE subextClientFlagsAskFloat(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_FLOAT);
+} /* }}} */
 
 /* subextClientFlagsAskStick {{{ */
 /*
@@ -699,8 +715,9 @@ subextClientFlagsAskFloat(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FLO
  *  => false
  */
 
-VALUE
-subextClientFlagsAskStick(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_STICK); } /* }}} */
+VALUE subextClientFlagsAskStick(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_STICK);
+} /* }}} */
 
 /* subextClientFlagsAskResize {{{ */
 /*
@@ -715,8 +732,9 @@ subextClientFlagsAskStick(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_STI
  *  => false
  */
 
-VALUE
-subextClientFlagsAskResize(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_RESIZE); } /* }}} */
+VALUE subextClientFlagsAskResize(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_RESIZE);
+} /* }}} */
 
 /* subextClientFlagsAskUrgent {{{ */
 /*
@@ -731,8 +749,9 @@ subextClientFlagsAskResize(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_RE
  *  => false
  */
 
-VALUE
-subextClientFlagsAskUrgent(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_URGENT); } /* }}} */
+VALUE subextClientFlagsAskUrgent(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_URGENT);
+} /* }}} */
 
 /* subextClientFlagsAskZaphod {{{ */
 /*
@@ -747,8 +766,9 @@ subextClientFlagsAskUrgent(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_UR
  *  => false
  */
 
-VALUE
-subextClientFlagsAskZaphod(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_ZAPHOD); } /* }}} */
+VALUE subextClientFlagsAskZaphod(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_ZAPHOD);
+} /* }}} */
 
 /* subextClientFlagsAskFixed {{{ */
 /*
@@ -763,8 +783,9 @@ subextClientFlagsAskZaphod(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_ZA
  *  => false
  */
 
-VALUE
-subextClientFlagsAskFixed(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FIXED); } /* }}} */
+VALUE subextClientFlagsAskFixed(VALUE self) {
+    return ClientFlagsGet(self, SUB_EWMH_FIXED);
+} /* }}} */
 
 /* subextClientFlagsAskBorderless {{{ */
 /*
@@ -779,8 +800,7 @@ subextClientFlagsAskFixed(VALUE self) { return ClientFlagsGet(self, SUB_EWMH_FIX
  *  => false
  */
 
-VALUE
-subextClientFlagsAskBorderless(VALUE self) {
+VALUE subextClientFlagsAskBorderless(VALUE self) {
     return ClientFlagsGet(self, SUB_EWMH_BORDERLESS);
 } /* }}} */
 
@@ -794,8 +814,7 @@ subextClientFlagsAskBorderless(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleFull(VALUE self) {
+VALUE subextClientFlagsToggleFull(VALUE self) {
     return ClientFlagsToggle(self, "_NET_WM_STATE_FULLSCREEN", SUB_EWMH_FULL);
 } /* }}} */
 
@@ -809,8 +828,7 @@ subextClientFlagsToggleFull(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleFloat(VALUE self) {
+VALUE subextClientFlagsToggleFloat(VALUE self) {
     return ClientFlagsToggle(self, "_NET_WM_STATE_ABOVE", SUB_EWMH_FLOAT);
 } /* }}} */
 
@@ -824,8 +842,7 @@ subextClientFlagsToggleFloat(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleStick(VALUE self) {
+VALUE subextClientFlagsToggleStick(VALUE self) {
     return ClientFlagsToggle(self, "_NET_WM_STATE_STICKY", SUB_EWMH_STICK);
 } /* }}} */
 
@@ -839,8 +856,7 @@ subextClientFlagsToggleStick(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleResize(VALUE self) {
+VALUE subextClientFlagsToggleResize(VALUE self) {
     return ClientFlagsSet(self, SUB_EWMH_RESIZE, True);
 } /* }}} */
 
@@ -854,8 +870,7 @@ subextClientFlagsToggleResize(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleUrgent(VALUE self) {
+VALUE subextClientFlagsToggleUrgent(VALUE self) {
     return ClientFlagsSet(self, SUB_EWMH_URGENT, True);
 } /* }}} */
 
@@ -869,8 +884,7 @@ subextClientFlagsToggleUrgent(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleZaphod(VALUE self) {
+VALUE subextClientFlagsToggleZaphod(VALUE self) {
     return ClientFlagsSet(self, SUB_EWMH_ZAPHOD, True);
 } /* }}} */
 
@@ -884,8 +898,7 @@ subextClientFlagsToggleZaphod(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleFixed(VALUE self) {
+VALUE subextClientFlagsToggleFixed(VALUE self) {
     return ClientFlagsSet(self, SUB_EWMH_FIXED, True);
 } /* }}} */
 
@@ -899,8 +912,7 @@ subextClientFlagsToggleFixed(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsToggleBorderless(VALUE self) {
+VALUE subextClientFlagsToggleBorderless(VALUE self) {
     return ClientFlagsSet(self, SUB_EWMH_BORDERLESS, True);
 } /* }}} */
 
@@ -924,8 +936,7 @@ subextClientFlagsToggleBorderless(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientFlagsWriter(VALUE self, VALUE value) {
+VALUE subextClientFlagsWriter(VALUE self, VALUE value) {
     /* Check object type */
     if (T_ARRAY == rb_type(value)) {
         int i, flags = 0;
@@ -933,22 +944,23 @@ subextClientFlagsWriter(VALUE self, VALUE value) {
 
         /* Translate flags */
         for (i = 0; Qnil != (entry = rb_ary_entry(value, i)); ++i) {
-            if (CHAR2SYM("full") == entry)
+            if (CHAR2SYM("full") == entry) {
                 flags |= SUB_EWMH_FULL;
-            else if (CHAR2SYM("float") == entry)
+            } else if (CHAR2SYM("float") == entry) {
                 flags |= SUB_EWMH_FLOAT;
-            else if (CHAR2SYM("stick") == entry)
+            } else if (CHAR2SYM("stick") == entry) {
                 flags |= SUB_EWMH_STICK;
-            else if (CHAR2SYM("resize") == entry)
+            } else if (CHAR2SYM("resize") == entry) {
                 flags |= SUB_EWMH_RESIZE;
-            else if (CHAR2SYM("urgent") == entry)
+            } else if (CHAR2SYM("urgent") == entry) {
                 flags |= SUB_EWMH_URGENT;
-            else if (CHAR2SYM("zaphod") == entry)
+            } else if (CHAR2SYM("zaphod") == entry) {
                 flags |= SUB_EWMH_ZAPHOD;
-            else if (CHAR2SYM("fixed") == entry)
+            } else if (CHAR2SYM("fixed") == entry) {
                 flags |= SUB_EWMH_FIXED;
-            else if (CHAR2SYM("borderless") == entry)
+            } else if (CHAR2SYM("borderless") == entry) {
                 flags |= SUB_EWMH_BORDERLESS;
+            }
         }
 
         ClientFlagsSet(self, flags, False);
@@ -967,8 +979,9 @@ subextClientFlagsWriter(VALUE self, VALUE value) {
  *  => nil
  */
 
-VALUE
-subextClientRestackRaise(VALUE self) { return ClientRestack(self, Above); } /* }}} */
+VALUE subextClientRestackRaise(VALUE self) {
+    return ClientRestack(self, Above)
+} /* }}} */
 
 /* subextClientRestackLower {{{ */
 /*
@@ -980,8 +993,9 @@ subextClientRestackRaise(VALUE self) { return ClientRestack(self, Above); } /* }
  *  => nil
  */
 
-VALUE
-subextClientRestackLower(VALUE self) { return ClientRestack(self, Below); } /* }}} */
+VALUE subextClientRestackLower(VALUE self) {
+    return ClientRestack(self, Below);
+} /* }}} */
 
 /* subextClientAskAlive {{{ */
 /*
@@ -996,8 +1010,7 @@ subextClientRestackLower(VALUE self) { return ClientRestack(self, Below); } /* }
  *  => false
  */
 
-VALUE
-subextClientAskAlive(VALUE self) {
+VALUE subextClientAskAlive(VALUE self) {
     VALUE ret = Qfalse, win = Qnil;
     XWindowAttributes attrs;
 
@@ -1008,10 +1021,11 @@ subextClientAskAlive(VALUE self) {
     subextSubtlextConnect(NULL); ///< Implicit open connection
 
     /* Fetch client attributes */
-    if (!XGetWindowAttributes(display, NUM2LONG(win), &attrs))
+    if (!XGetWindowAttributes(display, NUM2LONG(win), &attrs)) {
         rb_obj_freeze(self);
-    else
+    } else {
         ret = Qtrue;
+    }
 
     return ret;
 } /* }}} */
@@ -1026,8 +1040,7 @@ subextClientAskAlive(VALUE self) {
  *  => #<Subtlext::Gravity:xxx>
  */
 
-VALUE
-subextClientGravityReader(VALUE self) {
+VALUE subextClientGravityReader(VALUE self) {
     VALUE win = Qnil, gravity = Qnil;
 
     /* Check ruby object */
@@ -1038,13 +1051,14 @@ subextClientGravityReader(VALUE self) {
 
     /* Load on demand */
     if (NIL_P((gravity = rb_iv_get(self, "@gravity")))) {
-        int *id = NULL;
+        int *id     = NULL;
         char buf[5] = {0};
 
         /* Get gravity */
         if ((id = (int *) subSharedPropertyGet(display, NUM2LONG(win), XA_CARDINAL,
                                                XInternAtom(display, "SUBTLE_CLIENT_GRAVITY", False),
-                                               NULL))) {
+                                               NULL)))
+        {
             /* Create gravity */
             snprintf(buf, sizeof(buf), "%d", *id);
             gravity = subextGravityInstantiate(buf);
@@ -1084,8 +1098,7 @@ subextClientGravityReader(VALUE self) {
  *  => #<Subtlext::Gravity:xxx>
  */
 
-VALUE
-subextClientGravityWriter(VALUE self, VALUE value) {
+VALUE subextClientGravityWriter(VALUE self, VALUE value) {
     /* Check ruby object */
     rb_check_frozen(self);
 
@@ -1099,8 +1112,9 @@ subextClientGravityWriter(VALUE self, VALUE value) {
             ClientGravity(Qnil, value, self);
             break;
         case T_OBJECT:
-            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Gravity"))))
+            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Gravity")))) {
                 ClientGravity(Qnil, value, self);
+            }
             break;
         case T_HASH:
             rb_hash_foreach(value, ClientGravity, self);
@@ -1125,8 +1139,7 @@ subextClientGravityWriter(VALUE self, VALUE value) {
  *  => #<Subtlext::Geometry:xxx>
  */
 
-VALUE
-subextClientGeometryReader(VALUE self) {
+VALUE subextClientGeometryReader(VALUE self) {
     VALUE win = Qnil, geom = Qnil;
 
     /* Check ruby object */
@@ -1175,8 +1188,7 @@ subextClientGeometryReader(VALUE self) {
  *  => #<Subtlext::Geometry:xxx>
  */
 
-VALUE
-subextClientGeometryWriter(int argc, VALUE *argv, VALUE self) {
+VALUE subextClientGeometryWriter(int argc, VALUE *argv, VALUE self) {
     VALUE klass = Qnil, geom = Qnil;
 
     /* Check ruby object */
@@ -1185,11 +1197,11 @@ subextClientGeometryWriter(int argc, VALUE *argv, VALUE self) {
 
     /* Delegate arguments */
     klass = rb_const_get(mod, rb_intern("Geometry"));
-    geom = rb_funcall2(klass, rb_intern("new"), argc, argv);
+    geom  = rb_funcall2(klass, rb_intern("new"), argc, argv);
 
     /* Update geometry */
     if (RTEST(geom)) {
-        VALUE win = Qnil;
+        VALUE win           = Qnil;
         SubMessageData data = {{0, 0, 0, 0, 0}};
 
         GET_ATTR(self, "@win", win);
@@ -1217,8 +1229,7 @@ subextClientGeometryWriter(int argc, VALUE *argv, VALUE self) {
  *  => #<Subtlext::Screen:xxx>
  */
 
-VALUE
-subextClientScreenReader(VALUE self) {
+VALUE subextClientScreenReader(VALUE self) {
     VALUE screen = Qnil, win = Qnil;
     int *id = NULL;
 
@@ -1229,7 +1240,8 @@ subextClientScreenReader(VALUE self) {
     /* Get screen */
     if ((id = (int *) subSharedPropertyGet(display, NUM2LONG(win), XA_CARDINAL,
                                            XInternAtom(display, "SUBTLE_CLIENT_SCREEN", False),
-                                           NULL))) {
+                                           NULL)))
+    {
         screen = subextScreenSingFind(self, INT2FIX(*id));
 
         free(id);
@@ -1248,8 +1260,7 @@ subextClientScreenReader(VALUE self) {
  *  => "subtle"
  */
 
-VALUE
-subextClientToString(VALUE self) {
+VALUE subextClientToString(VALUE self) {
     VALUE name = Qnil;
 
     /* Check ruby object */
@@ -1268,9 +1279,8 @@ subextClientToString(VALUE self) {
  *  => nil
  */
 
-VALUE
-subextClientKill(VALUE self) {
-    VALUE win = Qnil;
+VALUE subextClientKill(VALUE self) {
+    VALUE win           = Qnil;
     SubMessageData data = {{0, 0, 0, 0, 0}};
 
     /* Check ruby object */

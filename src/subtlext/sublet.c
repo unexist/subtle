@@ -1,43 +1,42 @@
 
- /**
-  * @package subtle
-  *
-  * @file subtle ruby extension
-  * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
-  * @version $Id$
-  *
-  * This program can be distributed under the terms of the GNU GPLv2.
-  * See the file COPYING for details.
-  **/
+/**
+ * @package subtle
+ *
+ * @file subtle ruby extension
+ * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPLv2.
+ * See the file COPYING for details.
+ **/
 
 #include "subtlext.h"
 
 /* SubletFind {{{ */
-static VALUE
-SubletFind(VALUE value,
-  int first)
-{
-  int flags = 0;
-  VALUE parsed = Qnil;
-  char buf[50] = { 0 };
+static VALUE SubletFind(VALUE value, int first) {
+    int flags = 0;
+    VALUE parsed = Qnil;
+    char buf[50] = {0};
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Check object type */
-  switch(rb_type(parsed = subextSubtlextParse(
-      value, buf, sizeof(buf), &flags)))
-    {
-      case T_SYMBOL:
-        if(CHAR2SYM("all") == parsed)
-          return subextSubletSingList(Qnil);
-        break;
-      case T_OBJECT:
-        if(rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Sublet"))))
-          return parsed;
+    /* Check object type */
+    switch (rb_type(parsed = subextSubtlextParse(value, buf, sizeof(buf), &flags))) {
+        case T_SYMBOL:
+            if (CHAR2SYM("all") == parsed) {
+                return subextSubletSingList(Qnil);
+            }
+            break;
+        case T_OBJECT:
+            if (rb_obj_is_instance_of(value, rb_const_get(mod, rb_intern("Sublet")))) {
+                return parsed;
+            }
+            break;
+        default:
+            rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(parsed));
     }
 
-  return subextSubtlextFindObjectsGeometry("SUBTLE_SUBLET_LIST",
-    "Sublet", buf, flags, first);
+    return subextSubtlextFindObjectsGeometry("SUBTLE_SUBLET_LIST", "Sublet", buf, flags, first);
 } /* }}} */
 
 /* Singleton */
@@ -72,11 +71,8 @@ SubletFind(VALUE value,
 
  */
 
-VALUE
-subextSubletSingFind(VALUE self,
-  VALUE value)
-{
-  return SubletFind(value, False);
+VALUE subextSubletSingFind(VALUE self, VALUE value) {
+    return SubletFind(value, False);
 } /* }}} */
 
 /* subextSubletSingFirst {{{ */
@@ -98,11 +94,8 @@ subextSubletSingFind(VALUE self,
  *  => #<Subtlext::Sublet:xxx>
  */
 
-VALUE
-subextSubletSingFirst(VALUE self,
-  VALUE value)
-{
-  return SubletFind(value, True);
+VALUE subextSubletSingFirst(VALUE self, VALUE value) {
+    return SubletFind(value, True);
 } /* }}} */
 
 /* subextSubletSingList {{{ */
@@ -119,11 +112,8 @@ subextSubletSingFirst(VALUE self,
  *  => []
  */
 
-VALUE
-subextSubletSingList(VALUE self)
-{
-  return subextSubtlextFindObjectsGeometry("SUBTLE_SUBLET_LIST",
-    "Sublet", NULL, 0, False);
+VALUE subextSubletSingList(VALUE self) {
+    return subextSubtlextFindObjectsGeometry("SUBTLE_SUBLET_LIST", "Sublet", NULL, 0, False);
 } /* }}} */
 
 /* Class */
@@ -138,21 +128,18 @@ subextSubletSingList(VALUE self)
  *  => #<Subtlext::Sublet:xxx>
  */
 
-VALUE
-subextSubletInit(VALUE self,
-  VALUE name)
-{
-  if(T_STRING != rb_type(name))
-    rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-      rb_obj_classname(name));
+VALUE subextSubletInit(VALUE self, VALUE name) {
+    if (T_STRING != rb_type(name)) {
+        rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(name));
+    }
 
-  /* Init object */
-  rb_iv_set(self, "@id",   Qnil);
-  rb_iv_set(self, "@name", name);
+    /* Init object */
+    rb_iv_set(self, "@id", Qnil);
+    rb_iv_set(self, "@name", name);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextSubletUpdate {{{ */
@@ -165,23 +152,20 @@ subextSubletInit(VALUE self,
  *  => #<Subtlext::Sublet:xxx>
  */
 
-VALUE
-subextSubletUpdate(VALUE self)
-{
-  VALUE id = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+VALUE subextSubletUpdate(VALUE self) {
+    VALUE id = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  /* Send message */
-  data.l[0] = FIX2INT(id);
+    /* Send message */
+    data.l[0] = FIX2INT(id);
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    "SUBTLE_SUBLET_UPDATE", data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_SUBLET_UPDATE", data, 32, True);
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextSubletSend {{{ */
@@ -195,37 +179,32 @@ subextSubletUpdate(VALUE self)
  *  => #<Subtlext::Sublet:xxx>
  */
 
-VALUE
-subextSubletSend(VALUE self,
-  VALUE value)
-{
-  VALUE id = Qnil;
+VALUE subextSubletSend(VALUE self, VALUE value) {
+    VALUE id = Qnil;
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  /* Check object type */
-  if(T_STRING == rb_type(value))
-    {
-      char *list = NULL;
-      SubMessageData data = { { 0, 0, 0, 0, 0 } };
+    /* Check object type */
+    if (T_STRING == rb_type(value)) {
+        char *list = NULL;
+        SubMessageData data = {{0, 0, 0, 0, 0}};
 
-      /* Store data */
-      list = strdup(RSTRING_PTR(value));
-      subSharedPropertySetStrings(display, DefaultRootWindow(display),
-        XInternAtom(display, "SUBTLE_DATA", False), &list, 1);
-      free(list);
+        /* Store data */
+        list = strdup(RSTRING_PTR(value));
+        subSharedPropertySetStrings(display, DefaultRootWindow(display),
+                                    XInternAtom(display, "SUBTLE_DATA", False), &list, 1);
+        free(list);
 
-      data.l[0] = FIX2INT(id);
+        data.l[0] = FIX2INT(id);
 
-      subSharedMessage(display, DefaultRootWindow(display),
-        "SUBTLE_SUBLET_DATA", data, 32, True);
+        subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_SUBLET_DATA", data, 32, True);
+    } else {
+        rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(value));
     }
-  else rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-    rb_obj_classname(value));
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextSubletVisibilityShow {{{ */
@@ -238,23 +217,20 @@ subextSubletSend(VALUE self,
  *  => #<Subtlext::Sublet:xxx>
  */
 
-VALUE
-subextSubletVisibilityShow(VALUE self)
-{
-  VALUE id = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+VALUE subextSubletVisibilityShow(VALUE self) {
+    VALUE id = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  data.l[0] = FIX2LONG(id);
-  data.l[1] = SUB_EWMH_VISIBLE;
+    data.l[0] = FIX2LONG(id);
+    data.l[1] = SUB_EWMH_VISIBLE;
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    "SUBTLE_SUBLET_FLAGS", data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_SUBLET_FLAGS", data, 32, True);
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextSubletVisibilityHide {{{ */
@@ -267,23 +243,20 @@ subextSubletVisibilityShow(VALUE self)
  *  => #<Subtlext::Sublet:xxx>
  */
 
-VALUE
-subextSubletVisibilityHide(VALUE self)
-{
-  VALUE id = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+VALUE subextSubletVisibilityHide(VALUE self) {
+    VALUE id = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  data.l[0] = FIX2LONG(id);
-  data.l[1] = SUB_EWMH_HIDDEN;
+    data.l[0] = FIX2LONG(id);
+    data.l[1] = SUB_EWMH_HIDDEN;
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    "SUBTLE_SUBLET_FLAGS", data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_SUBLET_FLAGS", data, 32, True);
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextSubletToString {{{ */
@@ -296,15 +269,13 @@ subextSubletVisibilityHide(VALUE self)
  *  => sublet
  */
 
-VALUE
-subextSubletToString(VALUE self)
-{
-  VALUE name = Qnil;
+VALUE subextSubletToString(VALUE self) {
+    VALUE name = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@name", name);
+    /* Check ruby object */
+    GET_ATTR(self, "@name", name);
 
-  return name;
+    return name;
 } /* }}} */
 
 /* subextSubletKill {{{ */
@@ -317,27 +288,24 @@ subextSubletToString(VALUE self)
  *  => nil
  */
 
-VALUE
-subextSubletKill(VALUE self)
-{
-  VALUE id = Qnil;
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+VALUE subextSubletKill(VALUE self) {
+    VALUE id = Qnil;
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  /* Check ruby object */
-  rb_check_frozen(self);
-  GET_ATTR(self, "@id", id);
+    /* Check ruby object */
+    rb_check_frozen(self);
+    GET_ATTR(self, "@id", id);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Send message */
-  data.l[0] = FIX2INT(id);
+    /* Send message */
+    data.l[0] = FIX2INT(id);
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    "SUBTLE_SUBLET_KILL", data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), "SUBTLE_SUBLET_KILL", data, 32, True);
 
-  rb_obj_freeze(self); ///< Freeze object
+    rb_obj_freeze(self); ///< Freeze object
 
-  return Qnil;
+    return Qnil;
 } /* }}} */
 
 // vim:ts=2:bs=2:sw=2:et:fdm=marker

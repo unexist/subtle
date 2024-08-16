@@ -1,170 +1,141 @@
 
- /**
-  * @package subtlext
-  *
-  * @file Gravity functions
-  * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
-  * @version $Id$
-  *
-  * This program can be distributed under the terms of the GNU GPLv2.
-  * See the file COPYING for details.
-  **/
+/**
+ * @package subtlext
+ *
+ * @file Gravity functions
+ * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPLv2.
+ * See the file COPYING for details.
+ **/
 
 #include "subtlext.h"
 
-#define SCALE(i,div,mul) (unsigned long)(0 < i ? ((float)i / div) * mul : 0)
+#define SCALE(i, div, mul) (unsigned long) (0 < i ? ((float) i / div) * mul : 0)
 
 /* ColorEqual {{{ */
-VALUE
-ColorEqual(VALUE self,
-  VALUE other,
-  int check_type)
-{
-  int ret = False;
-  VALUE pixel1 = Qnil, pixel2 = Qnil;
+VALUE ColorEqual(VALUE self, VALUE other, int check_type) {
+    int ret = False;
+    VALUE pixel1 = Qnil, pixel2 = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self,  "@pixel", pixel1);
-  GET_ATTR(other, "@pixel", pixel2);
+    /* Check ruby object */
+    GET_ATTR(self, "@pixel", pixel1);
+    GET_ATTR(other, "@pixel", pixel2);
 
-  /* Check ruby object types */
-  if(check_type)
-    {
-      ret = (rb_obj_class(self) == rb_obj_class(other) && pixel1 == pixel2);
+    /* Check ruby object types */
+    if (check_type) {
+        ret = (rb_obj_class(self) == rb_obj_class(other) && pixel1 == pixel2);
+    } else {
+        ret = (pixel1 == pixel2);
     }
-  else ret = (pixel1 == pixel2);
 
-  return ret ? Qtrue : Qfalse;
+    return ret ? Qtrue : Qfalse;
 } /* }}} */
 
 /* ColorPixelToRGB {{{ */
-static void
-ColorPixelToRGB(XColor *xcolor)
-{
-  XQueryColor(display, DefaultColormap(display,
-    DefaultScreen(display)), xcolor);
+static void ColorPixelToRGB(XColor *xcolor) {
+    XQueryColor(display, DefaultColormap(display, DefaultScreen(display)), xcolor);
 
-  /* Scale 65535 to 255 */
-  xcolor->red   = SCALE(xcolor->red,   65535, 255);
-  xcolor->green = SCALE(xcolor->green, 65535, 255);
-  xcolor->blue  = SCALE(xcolor->blue,  65535, 255);
+    /* Scale 65535 to 255 */
+    xcolor->red = SCALE(xcolor->red, 65535, 255);
+    xcolor->green = SCALE(xcolor->green, 65535, 255);
+    xcolor->blue = SCALE(xcolor->blue, 65535, 255);
 } /* }}} */
 
 /* ColorRGBToPixel {{{ */
-static void
-ColorRGBToPixel(XColor *xcolor)
-{
-  /* Scale 255 to 65535 */
-  xcolor->red   = SCALE(xcolor->red,   255, 65535);
-  xcolor->green = SCALE(xcolor->green, 255, 65535);
-  xcolor->blue  = SCALE(xcolor->blue,  255, 65535);
+static void ColorRGBToPixel(XColor *xcolor) {
+    /* Scale 255 to 65535 */
+    xcolor->red = SCALE(xcolor->red, 255, 65535);
+    xcolor->green = SCALE(xcolor->green, 255, 65535);
+    xcolor->blue = SCALE(xcolor->blue, 255, 65535);
 
-  XAllocColor(display, DefaultColormap(display,
-      DefaultScreen(display)), xcolor);
+    XAllocColor(display, DefaultColormap(display, DefaultScreen(display)), xcolor);
 
-  /* Scale 65535 to 255 */
-  xcolor->red   = SCALE(xcolor->red,   65535, 255);
-  xcolor->green = SCALE(xcolor->green, 65535, 255);
-  xcolor->blue  = SCALE(xcolor->blue,  65535, 255);
+    /* Scale 65535 to 255 */
+    xcolor->red = SCALE(xcolor->red, 65535, 255);
+    xcolor->green = SCALE(xcolor->green, 65535, 255);
+    xcolor->blue = SCALE(xcolor->blue, 65535, 255);
 } /* }}} */
 
 /* Helper */
 
 /* subextColorPixel {{{ */
-unsigned long
-subextColorPixel(VALUE red,
-  VALUE green,
-  VALUE blue,
-  XColor *xcolor)
-{
-  XColor xcol = { 0 };
+unsigned long subextColorPixel(VALUE red, VALUE green, VALUE blue, XColor *xcolor) {
+    XColor xcol = {0};
 
-  /* Check object type */
-  switch(rb_type(red))
-    {
-      case T_FIXNUM:
-      case T_BIGNUM:
-        if(NIL_P(green) && NIL_P(blue))
-          {
-            xcol.pixel = NUM2LONG(red);
+    /* Check object type */
+    switch (rb_type(red)) {
+        case T_FIXNUM:
+        case T_BIGNUM:
+            if (NIL_P(green) && NIL_P(blue)) {
+                xcol.pixel = NUM2LONG(red);
+
+                ColorPixelToRGB(&xcol);
+            } else {
+                xcol.red = NUM2INT(red);
+                xcol.green = NUM2INT(green);
+                xcol.blue = NUM2INT(blue);
+
+                ColorRGBToPixel(&xcol);
+            }
+            break;
+        case T_STRING:
+            xcol.pixel = subSharedParseColor(display, RSTRING_PTR(red));
 
             ColorPixelToRGB(&xcol);
-          }
-        else
-          {
-            xcol.red   = NUM2INT(red);
-            xcol.green = NUM2INT(green);
-            xcol.blue  = NUM2INT(blue);
+            break;
+        case T_ARRAY:
+            if (3 == FIX2INT(rb_funcall(red, rb_intern("size"), 0, NULL))) {
+                xcol.red = NUM2INT(rb_ary_entry(red, 0));
+                xcol.green = NUM2INT(rb_ary_entry(red, 1));
+                xcol.blue = NUM2INT(rb_ary_entry(red, 2));
 
-            ColorRGBToPixel(&xcol);
-          }
-        break;
-      case T_STRING:
-        xcol.pixel = subSharedParseColor(display, RSTRING_PTR(red));
-
-        ColorPixelToRGB(&xcol);
-        break;
-      case T_ARRAY:
-        if(3 == FIX2INT(rb_funcall(red, rb_intern("size"), 0, NULL)))
-          {
-            xcol.red   = NUM2INT(rb_ary_entry(red, 0));
-            xcol.green = NUM2INT(rb_ary_entry(red, 1));
-            xcol.blue  = NUM2INT(rb_ary_entry(red, 2));
-
-            ColorRGBToPixel(&xcol);
-          }
-        break;
-      case T_HASH:
-          {
-            xcol.red   = NUM2INT(rb_hash_lookup(red, CHAR2SYM("red")));
+                ColorRGBToPixel(&xcol);
+            }
+            break;
+        case T_HASH: {
+            xcol.red = NUM2INT(rb_hash_lookup(red, CHAR2SYM("red")));
             xcol.green = NUM2INT(rb_hash_lookup(red, CHAR2SYM("green")));
-            xcol.blue  = NUM2INT(rb_hash_lookup(red, CHAR2SYM("blue")));
+            xcol.blue = NUM2INT(rb_hash_lookup(red, CHAR2SYM("blue")));
 
             ColorRGBToPixel(&xcol);
-          }
-        break;
-      case T_OBJECT:
-          {
+        } break;
+        case T_OBJECT: {
             VALUE klass = rb_const_get(mod, rb_intern("Color"));
 
             /* Check object instance */
-            if(rb_obj_is_instance_of(red, klass))
-              {
-                xcol.red   = NUM2INT(rb_iv_get(red, "@red"));
+            if (rb_obj_is_instance_of(red, klass)) {
+                xcol.red = NUM2INT(rb_iv_get(red, "@red"));
                 xcol.green = NUM2INT(rb_iv_get(red, "@green"));
-                xcol.blue  = NUM2INT(rb_iv_get(red, "@blue"));
+                xcol.blue = NUM2INT(rb_iv_get(red, "@blue"));
                 xcol.pixel = NUM2LONG(rb_iv_get(red, "@pixel"));
-              }
-          }
-        break;
-      default:
-        rb_raise(rb_eArgError, "Unexpected value-type `%s'",
-          rb_obj_classname(red));
+            }
+        } break;
+        default:
+            rb_raise(rb_eArgError, "Unexpected value-type `%s'", rb_obj_classname(red));
     }
 
-  if(xcolor)
-    {
-      xcolor->red   = xcol.red;
-      xcolor->green = xcol.green;
-      xcolor->blue  = xcol.blue;
-      xcolor->pixel = xcol.pixel;
+    if (xcolor) {
+        xcolor->red = xcol.red;
+        xcolor->green = xcol.green;
+        xcolor->blue = xcol.blue;
+        xcolor->pixel = xcol.pixel;
     }
 
 
-  return xcol.pixel;
+    return xcol.pixel;
 } /* }}} */
 
 /* subextColorInstantiate {{{ */
-VALUE
-subextColorInstantiate(unsigned long pixel)
-{
-  VALUE klass = Qnil, color = Qnil;
+VALUE subextColorInstantiate(unsigned long pixel) {
+    VALUE klass = Qnil, color = Qnil;
 
-  /* Create new instance */
-  klass  = rb_const_get(mod, rb_intern("Color"));
-  color = rb_funcall(klass, rb_intern("new"), 1, LONG2NUM(pixel));
+    /* Create new instance */
+    klass = rb_const_get(mod, rb_intern("Color"));
+    color = rb_funcall(klass, rb_intern("new"), 1, LONG2NUM(pixel));
 
-  return color;
+    return color;
 } /* }}} */
 
 /* Class */
@@ -211,28 +182,24 @@ subextColorInstantiate(unsigned long pixel)
  *  => #<Subtlext::Color:xxx>
  */
 
-VALUE
-subextColorInit(int argc,
-  VALUE *argv,
-  VALUE self)
-{
-  VALUE data[3] = { Qnil };
-  XColor xcolor = { 0 };
+VALUE subextColorInit(int argc, VALUE *argv, VALUE self) {
+    VALUE data[3] = {Qnil};
+    XColor xcolor = {0};
 
-  rb_scan_args(argc, argv, "12", &data[0], &data[1], &data[2]);
+    rb_scan_args(argc, argv, "12", &data[0], &data[1], &data[2]);
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Get color values */
-  subextColorPixel(data[0], data[1], data[2], &xcolor);
+    /* Get color values */
+    subextColorPixel(data[0], data[1], data[2], &xcolor);
 
-  /* Set values */
-  rb_iv_set(self, "@red",   INT2FIX(xcolor.red));
-  rb_iv_set(self, "@green", INT2FIX(xcolor.green));
-  rb_iv_set(self, "@blue",  INT2FIX(xcolor.blue));
-  rb_iv_set(self, "@pixel", LONG2NUM(xcolor.pixel));
+    /* Set values */
+    rb_iv_set(self, "@red", INT2FIX(xcolor.red));
+    rb_iv_set(self, "@green", INT2FIX(xcolor.green));
+    rb_iv_set(self, "@blue", INT2FIX(xcolor.blue));
+    rb_iv_set(self, "@pixel", LONG2NUM(xcolor.pixel));
 
-  return self;
+    return self;
 } /* }}} */
 
 /* subextColorToHex {{{ */
@@ -245,21 +212,19 @@ subextColorInit(int argc,
  *  => "#ff0000"
  */
 
-VALUE
-subextColorToHex(VALUE self)
-{
-  char buf[8] = { 0 };
-  VALUE red = Qnil, green = Qnil, blue = Qnil;
+VALUE subextColorToHex(VALUE self) {
+    char buf[8] = {0};
+    VALUE red = Qnil, green = Qnil, blue = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@red",   red);
-  GET_ATTR(self, "@green", green);
-  GET_ATTR(self, "@blue",  blue);
+    /* Check ruby object */
+    GET_ATTR(self, "@red", red);
+    GET_ATTR(self, "@green", green);
+    GET_ATTR(self, "@blue", blue);
 
-  snprintf(buf, sizeof(buf), "#%02X%02X%02X",
-    (int)FIX2INT(red), (int)FIX2INT(green), (int)FIX2INT(blue));
+    snprintf(buf, sizeof(buf), "#%02X%02X%02X", (int) FIX2INT(red), (int) FIX2INT(green),
+             (int) FIX2INT(blue));
 
-  return rb_str_new2(buf);
+    return rb_str_new2(buf);
 } /* }}} */
 
 /* subextColorToArray {{{ */
@@ -273,25 +238,23 @@ subextColorToHex(VALUE self)
  *  => [ 51, 102, 253 ]
  */
 
-VALUE
-subextColorToArray(VALUE self)
-{
-  VALUE ary = Qnil, red = Qnil, green = Qnil, blue = Qnil;
+VALUE subextColorToArray(VALUE self) {
+    VALUE ary = Qnil, red = Qnil, green = Qnil, blue = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@red",   red);
-  GET_ATTR(self, "@green", green);
-  GET_ATTR(self, "@blue",  blue);
+    /* Check ruby object */
+    GET_ATTR(self, "@red", red);
+    GET_ATTR(self, "@green", green);
+    GET_ATTR(self, "@blue", blue);
 
-  /* Create new array */
-  ary = rb_ary_new2(3);
+    /* Create new array */
+    ary = rb_ary_new2(3);
 
-  /* Set values */
-  rb_ary_push(ary, red);
-  rb_ary_push(ary, green);
-  rb_ary_push(ary, blue);
+    /* Set values */
+    rb_ary_push(ary, red);
+    rb_ary_push(ary, green);
+    rb_ary_push(ary, blue);
 
-  return ary;
+    return ary;
 } /* }}} */
 
 /* subextColorToHash {{{ */
@@ -305,26 +268,24 @@ subextColorToArray(VALUE self)
  *  => { :red => 51, :green => 102, :blue => 253 }
  */
 
-VALUE
-subextColorToHash(VALUE self)
-{
-  VALUE klass = Qnil, hash = Qnil, red = Qnil, green = Qnil, blue = Qnil;
+VALUE subextColorToHash(VALUE self) {
+    VALUE klass = Qnil, hash = Qnil, red = Qnil, green = Qnil, blue = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@red",   red);
-  GET_ATTR(self, "@green", green);
-  GET_ATTR(self, "@blue",  blue);
+    /* Check ruby object */
+    GET_ATTR(self, "@red", red);
+    GET_ATTR(self, "@green", green);
+    GET_ATTR(self, "@blue", blue);
 
-  /* Create new hash */
-  klass = rb_const_get(rb_mKernel, rb_intern("Hash"));
-  hash  = rb_funcall(klass, rb_intern("new"), 0, NULL);
+    /* Create new hash */
+    klass = rb_const_get(rb_mKernel, rb_intern("Hash"));
+    hash = rb_funcall(klass, rb_intern("new"), 0, NULL);
 
-  /* Set values */
-  rb_hash_aset(hash, CHAR2SYM("red"),   red);
-  rb_hash_aset(hash, CHAR2SYM("green"), green);
-  rb_hash_aset(hash, CHAR2SYM("blue"),  blue);
+    /* Set values */
+    rb_hash_aset(hash, CHAR2SYM("red"), red);
+    rb_hash_aset(hash, CHAR2SYM("green"), green);
+    rb_hash_aset(hash, CHAR2SYM("blue"), blue);
 
-  return hash;
+    return hash;
 } /* }}} */
 
 /* subextColorToString {{{ */
@@ -337,19 +298,16 @@ subextColorToHash(VALUE self)
  *  => "<>123456789<>"
  */
 
-VALUE
-subextColorToString(VALUE self)
-{
-  char buf[20] = { 0 };
-  VALUE pixel = Qnil;
+VALUE subextColorToString(VALUE self) {
+    char buf[20] = {0};
+    VALUE pixel = Qnil;
 
-  /* Check ruby object */
-  GET_ATTR(self, "@pixel", pixel);
+    /* Check ruby object */
+    GET_ATTR(self, "@pixel", pixel);
 
-  snprintf(buf, sizeof(buf), "%s#%ld%s",
-    SEPARATOR, NUM2LONG(pixel), SEPARATOR);
+    snprintf(buf, sizeof(buf), "%s#%ld%s", SEPARATOR, NUM2LONG(pixel), SEPARATOR);
 
-  return rb_str_new2(buf);
+    return rb_str_new2(buf);
 } /* }}} */
 
 /* subextColorOperatorPlus {{{ */
@@ -362,11 +320,8 @@ subextColorToString(VALUE self)
  *  => "<>123456789<>subtle"
  */
 
-VALUE
-subextColorOperatorPlus(VALUE self,
-  VALUE value)
-{
-  return subextSubtlextConcat(subextColorToString(self), value);
+VALUE subextColorOperatorPlus(VALUE self, VALUE value) {
+    return subextSubtlextConcat(subextColorToString(self), value);
 } /* }}} */
 
 /* subextColorEqual {{{ */
@@ -379,11 +334,8 @@ subextColorOperatorPlus(VALUE self,
  *  => true
  */
 
-VALUE
-subextColorEqual(VALUE self,
-  VALUE other)
-{
-  return ColorEqual(self, other, False);
+VALUE subextColorEqual(VALUE self, VALUE other) {
+    return ColorEqual(self, other, False);
 } /* }}} */
 
 /* subextColorEqualTyped {{{ */
@@ -396,11 +348,8 @@ subextColorEqual(VALUE self,
  *  => true
  */
 
-VALUE
-subextColorEqualTyped(VALUE self,
-  VALUE other)
-{
-  return ColorEqual(self, other, True);
+VALUE subextColorEqualTyped(VALUE self, VALUE other) {
+    return ColorEqual(self, other, True);
 } /* }}} */
 
 // vim:ts=2:bs=2:sw=2:et:fdm=marker

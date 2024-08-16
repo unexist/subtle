@@ -1,29 +1,26 @@
 
- /**
-  * @package subtle
-  *
-  * @file subtle ruby extension
-  * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
-  * @version $Id$
-  *
-  * This program can be distributed under the terms of the GNU GPLv2.
-  * See the file COPYING for details.
-  **/
+/**
+ * @package subtle
+ *
+ * @file subtle ruby extension
+ * @copyright 2005-present Christoph Kappel <christoph@unexist.dev>
+ * @version $Id$
+ *
+ * This program can be distributed under the terms of the GNU GPLv2.
+ * See the file COPYING for details.
+ **/
 
 #include "subtlext.h"
 
 /* SubtleSend {{{ */
-static VALUE
-SubtleSend(char *message)
-{
-  SubMessageData data = { { 0, 0, 0, 0, 0 } };
+static VALUE SubtleSend(char *message) {
+    SubMessageData data = {{0, 0, 0, 0, 0}};
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  subSharedMessage(display, DefaultRootWindow(display),
-    message, data, 32, True);
+    subSharedMessage(display, DefaultRootWindow(display), message, data, 32, True);
 
-  return Qnil;
+    return Qnil;
 } /* }}} */
 
 /* Singleton */
@@ -38,12 +35,10 @@ SubtleSend(char *message)
  *  => ":0"
  */
 
-VALUE
-subextSubtleSingDisplayReader(VALUE self)
-{
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+VALUE subextSubtleSingDisplayReader(VALUE self) {
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  return rb_str_new2(DisplayString(display));
+    return rb_str_new2(DisplayString(display));
 } /* }}} */
 
 /* subextSubtleSingDisplayWriter {{{ */
@@ -56,15 +51,11 @@ subextSubtleSingDisplayReader(VALUE self)
  *  => nil
  */
 
-VALUE
-subextSubtleSingDisplayWriter(VALUE self,
-  VALUE display_string)
-{
-  /* Explicit open connection */
-  subextSubtlextConnect(T_STRING == rb_type(display_string) ?
-    RSTRING_PTR(display_string) : NULL);
+VALUE subextSubtleSingDisplayWriter(VALUE self, VALUE display_string) {
+    /* Explicit open connection */
+    subextSubtlextConnect(T_STRING == rb_type(display_string) ? RSTRING_PTR(display_string) : NULL);
 
-  return Qnil;
+    return Qnil;
 } /* }}} */
 
 /* subextSubtleSingAskRunning {{{ */
@@ -80,34 +71,31 @@ subextSubtleSingDisplayWriter(VALUE self,
  *  => false
  */
 
-VALUE
-subextSubtleSingAskRunning(VALUE self)
-{
-  char *version = NULL;
-  Window *support = NULL;
-  VALUE running = Qfalse;
+VALUE subextSubtleSingAskRunning(VALUE self) {
+    char *version = NULL;
+    Window *support = NULL;
+    VALUE running = Qfalse;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Get supporting window */
-  if((support = (Window *)subSharedPropertyGet(display,
-      DefaultRootWindow(display), XA_WINDOW, XInternAtom(display,
-      "_NET_SUPPORTING_WM_CHECK", False), NULL)))
+    /* Get supporting window */
+    if ((support = (Window *) subSharedPropertyGet(
+                 display, DefaultRootWindow(display), XA_WINDOW,
+                 XInternAtom(display, "_NET_SUPPORTING_WM_CHECK", False), NULL)))
     {
-      /* Get version property */
-      if((version = subSharedPropertyGet(display, *support, XInternAtom(display,
-          "UTF8_STRING", False), XInternAtom(display, "SUBTLE_VERSION", False),
-          NULL)))
-        {
-          running = Qtrue;
+        /* Get version property */
+        if ((version = subSharedPropertyGet(display, *support,
+                                            XInternAtom(display, "UTF8_STRING", False),
+                                            XInternAtom(display, "SUBTLE_VERSION", False), NULL))) {
+            running = Qtrue;
 
-          free(version);
+            free(version);
         }
 
-      free(support);
+        free(support);
     }
 
-  return running;
+    return running;
 } /* }}} */
 
 /* subextSubtleSingSelect {{{ */
@@ -120,83 +108,81 @@ subextSubtleSingAskRunning(VALUE self)
  *  => 8388617
  */
 
-VALUE
-subextSubtleSingSelect(VALUE self)
-{
-  int i, format = 0, buttons = 0;
-  unsigned int nwins = 0;
-  unsigned long nitems = 0, bytes = 0;
-  unsigned char *data = NULL;
-  XEvent event;
-  Window win = None;
-  Atom type = None, rtype = None;
-  Window wroot = None, parent = None, root = None, *wins = NULL;
-  Cursor cursor = None;
+VALUE subextSubtleSingSelect(VALUE self) {
+    int i, format = 0, buttons = 0;
+    unsigned int nwins = 0;
+    unsigned long nitems = 0, bytes = 0;
+    unsigned char *data = NULL;
+    XEvent event;
+    Window win = None;
+    Atom type = None, rtype = None;
+    Window wroot = None, parent = None, root = None, *wins = NULL;
+    Cursor cursor = None;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  root   = DefaultRootWindow(display);
-  cursor = XCreateFontCursor(display, XC_cross);
-  type   = XInternAtom(display, "WM_STATE", True);
+    root = DefaultRootWindow(display);
+    cursor = XCreateFontCursor(display, XC_cross);
+    type = XInternAtom(display, "WM_STATE", True);
 
-  /* Grab pointer */
-  if(XGrabPointer(display, root, False, ButtonPressMask|ButtonReleaseMask,
-      GrabModeSync, GrabModeAsync, root, cursor, CurrentTime))
+    /* Grab pointer */
+    if (XGrabPointer(display, root, False, ButtonPressMask | ButtonReleaseMask, GrabModeSync,
+                     GrabModeAsync, root, cursor, CurrentTime))
     {
-      XFreeCursor(display, cursor);
+        XFreeCursor(display, cursor);
 
-      return Qnil;
+        return Qnil;
     }
 
-  /* Select a window */
-  while(None == win || 0 != buttons)
-    {
-      XAllowEvents(display, SyncPointer, CurrentTime);
-      XWindowEvent(display, root, ButtonPressMask|ButtonReleaseMask, &event);
+    /* Select a window */
+    while (None == win || 0 != buttons) {
+        XAllowEvents(display, SyncPointer, CurrentTime);
+        XWindowEvent(display, root, ButtonPressMask | ButtonReleaseMask, &event);
 
-      switch(event.type)
-        {
-          case ButtonPress:
-            if(None == win)
-              win = event.xbutton.subwindow ? event.xbutton.subwindow : root; ///< Sanitize
-            buttons++;
-            break;
-          case ButtonRelease:
-            if(0 < buttons) buttons--;
-            break;
+        switch (event.type) {
+            case ButtonPress:
+                if (None == win) {
+                    win = event.xbutton.subwindow ? event.xbutton.subwindow : root; ///< Sanitize
+                }
+                buttons++;
+                break;
+            case ButtonRelease:
+                if (0 < buttons) {
+                    buttons--;
+                }
+                break;
         }
-      }
+    }
 
-  /* Find children with WM_STATE atom */
-  XQueryTree(display, win, &wroot, &parent, &wins, &nwins);
+    /* Find children with WM_STATE atom */
+    XQueryTree(display, win, &wroot, &parent, &wins, &nwins);
 
-  for(i = 0; i < nwins; i++)
-    {
-      if(Success == XGetWindowProperty(display, wins[i], type, 0, 0, False,
-          AnyPropertyType, &rtype, &format, &nitems, &bytes, &data))
+    for (i = 0; i < nwins; i++) {
+        if (Success == XGetWindowProperty(display, wins[i], type, 0, 0, False, AnyPropertyType,
+                                          &rtype, &format, &nitems, &bytes, &data))
         {
-          if(data)
-            {
-              XFree(data);
-              data = NULL;
+            if (data) {
+                XFree(data);
+                data = NULL;
             }
 
-          if(type == rtype)
-            {
-              win = wins[i];
+            if (type == rtype) {
+                win = wins[i];
 
-              break;
+                break;
             }
         }
     }
 
-  if(wins) XFree(wins);
-  XFreeCursor(display, cursor);
-  XUngrabPointer(display, CurrentTime);
+    if (wins) {
+        XFree(wins);
+    }
+    XFreeCursor(display, cursor);
+    XUngrabPointer(display, CurrentTime);
 
-  XSync(display, False); ///< Sync all changes
+    XSync(display, False); ///< Sync all changes
 
-  return None != win ? LONG2NUM(win) : Qnil;
+    return None != win ? LONG2NUM(win) : Qnil;
 } /* }}} */
 
 /* subextSubtleSingRender {{{ */
@@ -209,10 +195,8 @@ subextSubtleSingSelect(VALUE self)
  *  => nil
  */
 
-VALUE
-subextSubtleSingRender(VALUE self)
-{
-  return SubtleSend("SUBTLE_RENDER");
+VALUE subextSubtleSingRender(VALUE self) {
+    return SubtleSend("SUBTLE_RENDER");
 } /* }}} */
 
 /* subextSubtleSingReload {{{ */
@@ -225,10 +209,8 @@ subextSubtleSingRender(VALUE self)
  *  => nil
  */
 
-VALUE
-subextSubtleSingReload(VALUE self)
-{
-  return SubtleSend("SUBTLE_RELOAD");
+VALUE subextSubtleSingReload(VALUE self) {
+    return SubtleSend("SUBTLE_RELOAD");
 } /* }}} */
 
 /* subextSubtleSingRestart {{{ */
@@ -241,10 +223,8 @@ subextSubtleSingReload(VALUE self)
  *  => nil
  */
 
-VALUE
-subextSubtleSingRestart(VALUE self)
-{
-  return SubtleSend("SUBTLE_RESTART");
+VALUE subextSubtleSingRestart(VALUE self) {
+    return SubtleSend("SUBTLE_RESTART");
 } /* }}} */
 
 /* subextSubtleSingQuit {{{ */
@@ -257,10 +237,8 @@ subextSubtleSingRestart(VALUE self)
  *  => nil
  */
 
-VALUE
-subextSubtleSingQuit(VALUE self)
-{
-  return SubtleSend("SUBTLE_QUIT");
+VALUE subextSubtleSingQuit(VALUE self) {
+    return SubtleSend("SUBTLE_QUIT");
 } /* }}} */
 
 /* subextSubtleSingColors {{{ */
@@ -273,55 +251,81 @@ subextSubtleSingQuit(VALUE self)
  *  => { :fg_panel => #<Subtlext::Color:xxx> }
  */
 
-VALUE
-subextSubtleSingColors(VALUE self)
-{
-  int i;
-  unsigned long ncolors = 0, *colors = NULL;
-  VALUE meth = Qnil, klass = Qnil, hash = Qnil;
-  const char *names[] = {
-    "title_fg",           "title_bg",             "title_bo_top",
-    "title_bo_right",     "title_bo_bottom",      "title_bo_left",
-    "views_fg",           "views_bg",             "views_bo_top",
-    "views_bo_right",     "views_bo_bottom",      "views_bo_left",
-    "focus_fg",           "focus_bg",             "focus_bo_top",
-    "focus_bo_right",     "focus_bo_bottom",      "focus_bo_left",
-    "urgent_fg",          "urgent_bg",            "urgent_bo_top",
-    "urgent_bo_right",    "urgent_bo_bottom",     "urgent_bo_left",
-    "occupied_fg",        "occupied_bg",          "occupied_bo_top",
-    "occupied_bo_right",  "occupied_bo_bottom",   "occupied_bo_left",
-    "sublets_fg",         "sublets_bg",           "sublets_bo_top",
-    "sublets_bo_right",   "sublets_bo_bottom",    "sublets_bo_left",
-    "separator_fg",       "separator_bg",         "separator_bo_top",
-    "separator_bo_right", "separator_bo_bottom",  "separator_bo_left",
-    "client_active",      "client_inactive",
-    "panel_top",          "panel_bottom",
-    "stipple",            "background"
-  };
+VALUE subextSubtleSingColors(VALUE self) {
+    int i;
+    unsigned long ncolors = 0, *colors = NULL;
+    VALUE meth = Qnil, klass = Qnil, hash = Qnil;
+    const char *names[] = {"title_fg",
+                           "title_bg",
+                           "title_bo_top",
+                           "title_bo_right",
+                           "title_bo_bottom",
+                           "title_bo_left",
+                           "views_fg",
+                           "views_bg",
+                           "views_bo_top",
+                           "views_bo_right",
+                           "views_bo_bottom",
+                           "views_bo_left",
+                           "focus_fg",
+                           "focus_bg",
+                           "focus_bo_top",
+                           "focus_bo_right",
+                           "focus_bo_bottom",
+                           "focus_bo_left",
+                           "urgent_fg",
+                           "urgent_bg",
+                           "urgent_bo_top",
+                           "urgent_bo_right",
+                           "urgent_bo_bottom",
+                           "urgent_bo_left",
+                           "occupied_fg",
+                           "occupied_bg",
+                           "occupied_bo_top",
+                           "occupied_bo_right",
+                           "occupied_bo_bottom",
+                           "occupied_bo_left",
+                           "sublets_fg",
+                           "sublets_bg",
+                           "sublets_bo_top",
+                           "sublets_bo_right",
+                           "sublets_bo_bottom",
+                           "sublets_bo_left",
+                           "separator_fg",
+                           "separator_bg",
+                           "separator_bo_top",
+                           "separator_bo_right",
+                           "separator_bo_bottom",
+                           "separator_bo_left",
+                           "client_active",
+                           "client_inactive",
+                           "panel_top",
+                           "panel_bottom",
+                           "stipple",
+                           "background"};
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Fetch data */
-  meth  = rb_intern("new");
-  klass = rb_const_get(mod, rb_intern("Color"));
-  hash  = rb_hash_new();
+    /* Fetch data */
+    meth = rb_intern("new");
+    klass = rb_const_get(mod, rb_intern("Color"));
+    hash = rb_hash_new();
 
-  /* Check result */
-  if((colors = (unsigned long *)subSharedPropertyGet(display,
-      DefaultRootWindow(display), XA_CARDINAL,
-      XInternAtom(display, "SUBTLE_COLORS", False), &ncolors)))
+    /* Check result */
+    if ((colors = (unsigned long *) subSharedPropertyGet(
+                 display, DefaultRootWindow(display), XA_CARDINAL,
+                 XInternAtom(display, "SUBTLE_COLORS", False), &ncolors)))
     {
-      for(i = 0; i < ncolors && i < LENGTH(names); i++)
-        {
-          VALUE c = rb_funcall(klass, meth, 1, LONG2NUM(colors[i]));
+        for (i = 0; i < ncolors && i < LENGTH(names); i++) {
+            VALUE c = rb_funcall(klass, meth, 1, LONG2NUM(colors[i]));
 
-          rb_hash_aset(hash, CHAR2SYM(names[i]), c);
+            rb_hash_aset(hash, CHAR2SYM(names[i]), c);
         }
 
-      free(colors);
+        free(colors);
     }
 
-  return hash;
+    return hash;
 } /* }}} */
 
 /* subextSubtleSingFont {{{ */
@@ -334,26 +338,23 @@ subextSubtleSingColors(VALUE self)
  *  => "-*-*-medium-*-*-*-14-*-*-*-*-*-*-*"
  */
 
-VALUE
-subextSubtleSingFont(VALUE self)
-{
-  char *prop = NULL;
-  VALUE font = Qnil;
+VALUE subextSubtleSingFont(VALUE self) {
+    char *prop = NULL;
+    VALUE font = Qnil;
 
-  subextSubtlextConnect(NULL); ///< Implicit open connection
+    subextSubtlextConnect(NULL); ///< Implicit open connection
 
-  /* Get results */
-  if((prop = subSharedPropertyGet(display, DefaultRootWindow(display),
-      XInternAtom(display, "UTF8_STRING", False),
-      XInternAtom(display, "SUBTLE_FONT", False),
-      NULL)))
+    /* Get results */
+    if ((prop = subSharedPropertyGet(display, DefaultRootWindow(display),
+                                     XInternAtom(display, "UTF8_STRING", False),
+                                     XInternAtom(display, "SUBTLE_FONT", False), NULL)))
     {
-      font = rb_str_new2(prop);
+        font = rb_str_new2(prop);
 
-      free(prop);
+        free(prop);
     }
 
-  return font;
+    return font;
 } /* }}} */
 
 // vim:ts=2:bs=2:sw=2:et:fdm=marker
