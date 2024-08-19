@@ -275,8 +275,9 @@ void subPanelUpdate(SubPanel *p) {
 
             if (0 < subtle->views->ndata) {
                 int i;
-                SubStyle s = {-1, .flags = SUB_TYPE_STYLE, .border = {-1}, .padding = {-1},
-                              .margin = {-1}};
+                SubStyle s = {.flags = SUB_TYPE_STYLE, .min = -1, .fg = -1, .bg = -1, .icon = -1,
+                              .top = -1, .right = -1, .bottom = -1, .left = -1,
+                              .border = {-1}, .padding = {-1}, .margin = {-1}};
 
                 /* Update for each view */
                 for (i = 0; i < subtle->views->ndata; i++) {
@@ -408,8 +409,9 @@ void subPanelRender(SubPanel *p, Drawable drawable) {
         case SUB_PANEL_VIEWS: /* {{{ */
             if (0 < subtle->views->ndata) {
                 int i, vx = p->x;
-                SubStyle s = {-1, .flags = SUB_TYPE_STYLE, .border = {-1}, .padding = {-1},
-                              .margin = {-1}};
+                SubStyle s = {.flags = SUB_TYPE_STYLE, .min = -1, .fg = -1, .bg = -1, .icon = -1,
+                              .top = -1, .right = -1, .bottom = -1, .left = -1,
+                              .border = {-1}, .padding = {-1}, .margin = {-1}};
 
                 /* View buttons */
                 for (i = 0; i < subtle->views->ndata; i++) {
