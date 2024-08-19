@@ -1553,9 +1553,11 @@ static VALUE RubyOptionsDispatcher(int argc, VALUE *argv, VALUE self) {
             /* Move args into array */
             param = rb_ary_new();
 
-            for (i = 0; i < LENGTH(args); i++)
-                if (!NIL_P(args[i]))
+            for (i = 0; i < LENGTH(args); i++) {
+                if (!NIL_P(args[i])) {
                     rb_ary_push(param, args[i]);
+                }
+            }
         } else {
             param = args[0];
         }
