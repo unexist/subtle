@@ -557,8 +557,7 @@ typedef enum subewmh_t /* {{{ */
     SUB_EWMH_TOTAL
 } SubEwmh; /* }}} */
 
-typedef struct subgrab_t /* {{{ */
-{
+typedef struct subgrab_t { /* {{{ */
     FLAGS flags; ///< Grab flags
 
     unsigned int code, state; ///< Grab code, stater
@@ -567,28 +566,24 @@ typedef struct subgrab_t /* {{{ */
     struct subarray_t *keys; ///< Grab chain keys
 } SubGrab; /* }}} */
 
-typedef struct subgravity_t /* {{{ */
-{
+typedef struct subgravity_t { /* {{{ */
     FLAGS flags; ///< Gravity flags
 
     int quark; ///< Gravity quark
     XRectangle geom; ///< Gravity geometry
 } SubGravity; /* }}} */
 
-typedef struct subhook_t /* {{{ */
-{
+typedef struct subhook_t { /* {{{ */
     FLAGS flags; ///< Hook flags
     unsigned long proc; ///< Hook proc
 } SubHook; /* }}} */
 
-typedef struct subicon_t /* {{{ */
-{
+typedef struct subicon_t { /* {{{ */
     int width, height, bitmap; ///< Icon height, bitmap
     Pixmap pixmap; ///< Icon pixmap
 } SubIcon; /* }}} */
 
-typedef struct subpanel_t /* {{{ */
-{
+typedef struct subpanel_t { /* {{{ */
     FLAGS flags; ///< Panel flags
     int x, width; ///< Panel x, width
     struct subscreen_t *screen; ///< Panel screen
@@ -600,8 +595,7 @@ typedef struct subpanel_t /* {{{ */
     };
 } SubPanel; /* }}} */
 
-typedef struct subscreen_t /* {{{ */
-{
+typedef struct subscreen_t { /* {{{ */
     FLAGS flags; ///< Screen flags
 
     int viewid; ///< Screen current view id
@@ -612,14 +606,14 @@ typedef struct subscreen_t /* {{{ */
     struct subarray_t *panels; ///< Screen panels
 } SubScreen; /* }}} */
 
-typedef struct subseparator_t /* {{{ */
-{
+typedef struct subseparator_t { /* {{{ */
     char *string; ///< Separator string
     int width; ///< Separator width
 } SubSeparator; /* }}} */
 
 typedef struct subsublet_t { /* {{{ */
     FLAGS flags; ///< Sublet flags
+
     int watch, width, styleid; ///< Sublet watch id, width and style id
     char *name; ///< Sublet name
     unsigned long instance; ///< Sublet ruby instance, fg, bg and icon color
@@ -628,14 +622,13 @@ typedef struct subsublet_t { /* {{{ */
     struct subtext_t *text; ///< Sublet text
 } SubSublet; /* }}} */
 
-typedef struct subsides_t /* {{{ */
-{
+typedef struct subsides_t { /* {{{ */
     int top, right, bottom, left; ///< Side values
 } SubSides; /* }}} */
 
-typedef struct substyle_t /* {{{ */
-{
+typedef struct substyle_t { /* {{{ */
     FLAGS flags; ///< Style flags
+
     char *name; ///< Style name
     int min; ///< Style min width
     long fg, bg, icon, top, right, bottom, left; ///< Style colors
@@ -645,8 +638,7 @@ typedef struct substyle_t /* {{{ */
     struct subseparator_t *separator; ///< Style separator
 } SubStyle; /* }}} */
 
-typedef struct subsubtle_t /* {{{ */
-{
+typedef struct subsubtle_t { /* {{{ */
     FLAGS flags; ///< Subtle flags
 
     int loglevel, width, height; ///< Subtle loglevel and screen size
@@ -702,9 +694,9 @@ typedef struct subsubtle_t /* {{{ */
     } cursors; ///< Subtle cursors
 } SubSubtle; /* }}} */
 
-typedef struct subtag_t /* {{{ */
-{
+typedef struct subtag_t { /* {{{ */
     FLAGS flags; ///< Tag flags
+
     char *name; ///< Tag name
     unsigned long gravityid, proc; ///< Tag gravity, proc
     int screenid; ///< Tag screen
@@ -712,32 +704,32 @@ typedef struct subtag_t /* {{{ */
     struct subarray_t *matcher; ///< Tag matcher
 } SubTag; /* }}} */
 
-typedef struct subtextitem_t /* {{{ */
-{
-    int flags, width, height; ///< Text flags, width, height
+typedef struct subtextitem_t { /* {{{ */
+    FLAGS flags; ///< Text flags
+
+    int width, height; ///< Text width, height
     long color; ///< Text color
 
     union subdata_t data; ///< Text data
 } SubTextItem; /* }}} */
 
-typedef struct subtext_t /* {{{ */
-{
+typedef struct subtext_t { /* {{{ */
     struct subtextitem_t **items; ///< Item text items
     int flags, nitems, width; ///< Item flags, count, width
 } SubText; /* }}} */
 
-typedef struct subtray_t /* {{{ */
-{
+typedef struct subtray_t { /* {{{ */
     FLAGS flags; ///< Tray flags
+
     char *name; ///< Tray name
 
     Window win; ///< Tray window
     int width; ///< Tray width
 } SubTray; /* }}} */
 
-typedef struct subview_t /* {{{ */
-{
+typedef struct subview_t { /* {{{ */
     FLAGS flags; ///< View flags
+
     char *name; ///< View name
     TAGS tags; ///< View tags
     Window focus; ///< View window, focus
