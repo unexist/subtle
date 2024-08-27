@@ -980,7 +980,7 @@ VALUE subextClientFlagsWriter(VALUE self, VALUE value) {
  */
 
 VALUE subextClientRestackRaise(VALUE self) {
-    return ClientRestack(self, Above)
+    return ClientRestack(self, Above);
 } /* }}} */
 
 /* subextClientRestackLower {{{ */
