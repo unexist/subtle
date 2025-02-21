@@ -1,0 +1,21 @@
+version: '3'
+env:
+  TEST_DISPLAY: '{{.TEST_DISPLAY | default ":2"}}'
+  DEBUG_LEVELS: '{{.LEVELS | default "ruby"}}'
+
+tasks:
+  build:
+    cmds:
+      - rake
+
+  rebuild:
+    cmds:
+      - rake clobber; rake
+
+  run:
+    cmds:
+      - ./subtle -d ${TEST_DISPLAY} -c dev.rb
+
+  debug:
+    cmds:
+      - ./subtle -d ${TEST_DISPLAY} -c dev.rb -D -l ${DEBUG_LEVELS}
