@@ -484,6 +484,9 @@ static void RubyHashToBorder(VALUE hash, const char *key, long *col, int *bw) {
         case T_STRING:
             *col = (long) subSharedParseColor(subtle->dpy, RSTRING_PTR(value));
             break;
+        case T_NIL:
+            /* Ignore nil type */
+            break;
         default:
             subSubtleLogWarn("Unexpected value type for border `%s'\n", rb_obj_classname(value));
             break;
@@ -1523,7 +1526,7 @@ static VALUE RubyObjectDispatcher(VALUE self, VALUE missing) {
 static VALUE RubyOptionsInit(VALUE self) {
     rb_iv_set(self, "@params", rb_hash_new());
 
-    return Qnil;
+    return self;
 } /* }}} */
 
 /* RubyOptionsDispatcher {{{ */
@@ -1625,7 +1628,7 @@ static VALUE RubyOptionsStyle(VALUE self, VALUE name) {
 
         /* Collect options */
         klass = rb_const_get(mod, rb_intern("Options"));
-        options = rb_funcall(klass, rb_intern("new"), 1, self);
+        options = rb_funcall(klass, rb_intern("new"), 0, NULL);
         rb_obj_instance_eval(0, 0, options);
 
         rb_hash_aset(styles, name, options);
@@ -1896,7 +1899,7 @@ static VALUE RubyConfigStyle(VALUE self, VALUE name) {
 
         /* Collect options */
         klass = rb_const_get(mod, rb_intern("Options"));
-        options = rb_funcall(klass, rb_intern("new"), 1, self);
+        options = rb_funcall(klass, rb_intern("new"), 0, NULL);
         rb_obj_instance_eval(0, 0, options);
 
         /* Eval style before nested styles */
@@ -2031,7 +2034,7 @@ static VALUE RubyConfigTag(int argc, VALUE *argv, VALUE self) {
 
         /* Collect options */
         klass = rb_const_get(mod, rb_intern("Options"));
-        options = rb_funcall(klass, rb_intern("new"), 1, self);
+        options = rb_funcall(klass, rb_intern("new"), 0, NULL);
         rb_obj_instance_eval(0, 0, options);
         params = rb_iv_get(options, "@params");
 
@@ -2130,6 +2133,10 @@ static VALUE RubyConfigTag(int argc, VALUE *argv, VALUE self) {
                     case T_REGEXP:
                     case T_STRING:
                         RubyForeachMatcher(Qnil, match, (VALUE) &rargs);
+                        break;
+                    case T_NIL:
+                        /* Ignore nil type */
+                        break;
                     default:
                         rb_raise(rb_eArgError, "Unexpected value type for matcher `%s'",
                                  rb_obj_classname(match));
@@ -2169,7 +2176,7 @@ static VALUE RubyConfigView(int argc, VALUE *argv, VALUE self) {
 
         /* Collect options */
         klass = rb_const_get(mod, rb_intern("Options"));
-        options = rb_funcall(klass, rb_intern("new"), 1, self);
+        options = rb_funcall(klass, rb_intern("new"), 0, NULL);
         rb_obj_instance_eval(0, 0, options);
         params = rb_iv_get(options, "@params");
 
@@ -2273,7 +2280,7 @@ static VALUE RubyConfigScreen(VALUE self, VALUE screenid) {
 
         /* Collect options */
         klass = rb_const_get(mod, rb_intern("Options"));
-        options = rb_funcall(klass, rb_intern("new"), 1, self);
+        options = rb_funcall(klass, rb_intern("new"), 0, NULL);
         rb_obj_instance_eval(0, 0, options);
         params = rb_iv_get(options, "@params");
 
@@ -2341,7 +2348,7 @@ static VALUE RubyConfigSublet(VALUE self, VALUE sublet) {
     if (T_SYMBOL == rb_type(sublet)) {
         /* Collect options */
         klass = rb_const_get(mod, rb_intern("Options"));
-        options = rb_funcall(klass, rb_intern("new"), 1, self);
+        options = rb_funcall(klass, rb_intern("new"), 0, NULL);
         rb_obj_instance_eval(0, 0, options);
 
         /* Clone to get rid of object instance and store it */
@@ -3187,7 +3194,7 @@ void subRubyInit(void) {
     rb_define_attr(options, "styles", 1, 1); ///< Nest styles
 
     /* Class methods */
-    rb_define_method(options, "initialize", RubyOptionsInit, 1);
+    rb_define_method(options, "initialize", RubyOptionsInit, 0);
     rb_define_method(options, "method_missing", RubyOptionsDispatcher, -1);
     rb_define_method(options, "gravity", RubyOptionsGravity, 1);
     rb_define_method(options, "style", RubyOptionsStyle, 1);
@@ -3219,7 +3226,7 @@ void subRubyInit(void) {
     rb_define_method(sublet, "screen", RubySubletScreenReader, 0);
     rb_define_method(sublet, "show", RubySubletShow, 0);
     rb_define_method(sublet, "style=", RubySubletStyleWriter, 1);
-    rb_define_method(sublet, "hide", RubySubletHide, 0);
+    rb_define_method(sublet, "hide", RubySubletHide, 1);
     rb_define_method(sublet, "watch", RubySubletWatch, 1);
     rb_define_method(sublet, "unwatch", RubySubletUnwatch, 0);
     rb_define_method(sublet, "warn", RubySubletWarn, 1);
