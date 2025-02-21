@@ -74,7 +74,7 @@ end
 
 @defines = {
   "PKG_NAME"      => "subtle",
-  "PKG_VERSION"   => "0.12.$(revision)",
+  "PKG_VERSION"   => "0.13.$(revision)",
   "PKG_BUGREPORT" => "https://subtle.de/projects/subtle/issues",
   "PKG_CONFIG"    => "subtle.rb",
   "RUBY_VERSION"  => "$(MAJOR).$(MINOR).$(TEENY)"
